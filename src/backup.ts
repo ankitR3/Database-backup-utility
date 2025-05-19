@@ -7,7 +7,7 @@ export class backupDatabase {
     
     private getTimestamp(): string {
         const date = new Date();
-        return date.toISOString().replace(/[:.]/g, '-');
+        return date.toISOString().replace(/[:.]/g, '-'); // rqbdouqebfjvbeQCBPIQNCKQ
     }
 
     private backupPath(dbName: string) {
