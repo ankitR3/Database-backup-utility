@@ -25,5 +25,3 @@ cron.schedule(config.schedule || "*/01 * * * *", () => {
 })
 
 console.log("📅 Backup scheduler is running...");
-
-

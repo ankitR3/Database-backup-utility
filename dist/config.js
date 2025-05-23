@@ -9,6 +9,6 @@ dotenv_1.default.config();
 exports.config = {
     dbUri: process.env.DB_URI,
     dbName: process.env.DB_NAME,
-    backupDir: process.env.BACKUP_DIR || `./backups`,
+    backupDir: process.env.BACKUP_DIR,
     schedule: process.env.SCHEDULE
 };

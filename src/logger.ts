@@ -5,7 +5,7 @@ export const log = {
     error: (msg: string) => {
         console.error(`[❌ ERROR] ${msg}`);
     },
-    info: (msg: string) =>{
+    info: (msg: string) => {
         console.log(`[ℹ️ INFO] ${msg}`);
     }
 };

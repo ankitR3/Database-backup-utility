@@ -17,8 +17,14 @@ export class backupDatabase {
         return `${config.backupDir}/${dbName}-${timestamp}`;
     }
 
-    private async backupDir(): Promise<void> {
+    private async ensureBackupDirExists(): Promise<void> {
         const dirPath = config.backupDir;
+
+        if (!dirPath) {
+            log.error("Backup directory path is not defined");
+            return;
+        }
+
         try {
             const exists = await fs.access(dirPath)
                         .then(() => true)
@@ -56,7 +62,7 @@ export class backupDatabase {
     public async runBackup(): Promise<void> {
         log.info(`Starting backup for ${config.dbName}...`);
 
-        await this.backupDir();
+        await this.ensureBackupDirExists();
         const backupDir = this.backupPath(config.dbName);
         const cmd = this.backupCommand(backupDir);
 

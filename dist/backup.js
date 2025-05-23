@@ -19,8 +19,12 @@ class backupDatabase {
         const timestamp = this.getTimestamp();
         return `${config_1.config.backupDir}/${dbName}-${timestamp}`;
     }
-    async backupDir() {
+    async ensureBackupDirExists() {
         const dirPath = config_1.config.backupDir;
+        if (!dirPath) {
+            logger_1.log.error("Backup directory path is not defined");
+            return;
+        }
         try {
             const exists = await fs_1.promises.access(dirPath)
                 .then(() => true)
@@ -50,7 +54,7 @@ class backupDatabase {
     }
     async runBackup() {
         logger_1.log.info(`Starting backup for ${config_1.config.dbName}...`);
-        await this.backupDir();
+        await this.ensureBackupDirExists();
         const backupDir = this.backupPath(config_1.config.dbName);
         const cmd = this.backupCommand(backupDir);
         return new Promise((resolve, reject) => {
