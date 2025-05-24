@@ -5,8 +5,11 @@ exports.log = {
     success: (msg) => {
         console.log(`[✅ SUCCESS] ${msg}`);
     },
-    error: (msg) => {
+    error: (msg, err, p0, reason) => {
         console.error(`[❌ ERROR] ${msg}`);
+        if (err) {
+            console.error(err);
+        }
     },
     info: (msg) => {
         console.log(`[ℹ️ INFO] ${msg}`);

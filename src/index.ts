@@ -1,27 +1,59 @@
 import cron from "node-cron";
 import { config } from "./config";
-import { backupDatabase } from "./backup";
+import { BackupDatabase } from "./backup";
 import { log } from "./logger";
 
-const backup = new backupDatabase
+async function main() {
+    try {
+        await config.setBackupLocation();
+        console.log("🔍 Active backup directory:", config.backupDir);
 
-// Run initial backup immediately
-backup.runBackup().catch((err) => {
-    log.error("Backup failed. Check DB_URI, DB_NAME, or connectivity.");
-    if (
-        err.message.includes("DB_URI"),
-        err.message.includes("DB_NAME"),
-        err.message.includes("ENOENT")
-    ) {
+        const backup = new BackupDatabase();
+
+        // Run initial backup immediately
+        console.log("🚀 Running initial backup...");
+        await backup.runBackup();
+
+        console.log("📅 Setting up backup scheduler...");
+
+        if (!cron.validate(config.schedule)) {
+            throw new Error(`Invalid cron schedule: ${config.schedule}`);
+        }
+
+        cron.schedule(config.schedule, async () => {
+            try {
+                log.info("🔄 Starting scheduled backup...");
+                await backup.runBackup();
+                log.success("✨ Scheduled backup completed successfully");
+            } catch (err) {
+                log.error("Scheduled backup failed:", err);
+            }
+        });
+
+        console.log("📅 Backup scheduler is running...");
+        console.log(`📍 Backups will be stored in: ${config.backupDir}`);
+        console.log(`⏰ Schedule: ${config.schedule}`);
+        console.log("🎯 Press Ctrl+C to stop the scheduler");
+
+        process.on("SIGINT", () => {
+            console.log('\n👋 Gracefully shutting down backup scheduler...');
+            process.exit(0);
+        });
+    } catch (error) {
+        console.error("❌ Failed to initialize backup utility:", error);
         process.exit(1);
     }
+}
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (error) => {
+    log.error("Uncaught Exception:", error);
+    process.exit(1);
 });
 
-// schedule future backups
-cron.schedule(config.schedule || "*/01 * * * *", () => {
-    backup.runBackup().catch((err) => {
-        console.error("Unexpected error during backup: ", err)
-    });
-})
+process.on("unhandledRejection", (reason: unknown, promise: any) => {
+    log.error("Unhandled Rejection at:", promise, "reason:", reason);
+    process.exit(1);
+});
 
-console.log("📅 Backup scheduler is running...");
+main();
