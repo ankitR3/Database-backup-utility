@@ -3,10 +3,9 @@ import { config } from "./config";
 import { BackupDatabase } from "./backup";
 import { log } from "./logger";
 
-async function main() {
+export async function main() {
     try {
         await config.setBackupLocation();
-        console.log("🔍 Active backup directory:", config.backupDir);
 
         const backup = new BackupDatabase();
 
@@ -32,8 +31,8 @@ async function main() {
 
         console.log("📅 Backup scheduler is running...");
         console.log(`📍 Backups will be stored in: ${config.backupDir}`);
-        console.log(`⏰ Schedule: ${config.schedule}`);
-        console.log("🎯 Press Ctrl+C to stop the scheduler");
+        // console.log(`⏰ Schedule: ${config.schedule}`);
+        // console.log("🎯 Press Ctrl+C to stop the scheduler");
 
         process.on("SIGINT", () => {
             console.log('\n👋 Gracefully shutting down backup scheduler...');

@@ -15,3 +15,4 @@ exports.log = {
         console.log(`[ℹ️ INFO] ${msg}`);
     }
 };
+//# sourceMappingURL=logger.js.map

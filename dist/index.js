@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.main = main;
 const node_cron_1 = __importDefault(require("node-cron"));
 const config_1 = require("./config");
 const backup_1 = require("./backup");
@@ -10,7 +11,6 @@ const logger_1 = require("./logger");
 async function main() {
     try {
         await config_1.config.setBackupLocation();
-        console.log("🔍 Active backup directory:", config_1.config.backupDir);
         const backup = new backup_1.BackupDatabase();
         console.log("🚀 Running initial backup...");
         await backup.runBackup();
@@ -30,8 +30,6 @@ async function main() {
         });
         console.log("📅 Backup scheduler is running...");
         console.log(`📍 Backups will be stored in: ${config_1.config.backupDir}`);
-        console.log(`⏰ Schedule: ${config_1.config.schedule}`);
-        console.log("🎯 Press Ctrl+C to stop the scheduler");
         process.on("SIGINT", () => {
             console.log('\n👋 Gracefully shutting down backup scheduler...');
             process.exit(0);
@@ -51,3 +49,4 @@ process.on("unhandledRejection", (reason, promise) => {
     process.exit(1);
 });
 main();
+//# sourceMappingURL=index.js.map
