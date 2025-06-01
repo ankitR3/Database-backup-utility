@@ -82,14 +82,14 @@ export class BackupDatabase {
         });
     }
 
-    //  private async cleanupUncompressedBackup(backupDir: string): Promise<void> {
-    //     try {
-    //         await fs.rm(backupDir, { recursive: true, force: true });
-    //         log.info(`Cleaned up uncompressed backup: ${backupDir}`);
-    //     } catch (error) {
-    //         log.error(`Failed to cleanup uncompressed backup: ${(error as Error).message}`);
-    //     }
-    // }
+     private async cleanupUncompressedBackup(backupDir: string): Promise<void> {
+        try {
+            await fs.rm(backupDir, { recursive: true, force: true });
+            log.info(`Cleaned up uncompressed backup: ${backupDir}`);
+        } catch (error) {
+            log.error(`Failed to cleanup uncompressed backup: ${(error as Error).message}`);
+        }
+    }
 
     public async runBackup(): Promise<void> {
         log.info(`Starting backup for ${config.dbName}...`);
@@ -118,7 +118,7 @@ export class BackupDatabase {
                 try {
                     log.success(`Backup successful: ${backupDir}`);
                     await this.zipDir(backupDir);
-                    // await this.cleanupUncompressedBackup(backupDir);
+                    await this.cleanupUncompressedBackup(backupDir);
                     resolve();
                     } catch (zipError) {
                         log.error(`Compression failed: ${(zipError as Error).message}`);

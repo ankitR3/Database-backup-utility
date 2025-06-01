@@ -28,6 +28,7 @@
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
+    "check-disk-space": "^3.4.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -35,10 +36,12 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.16.0",
     "mongoose": "^8.14.3",
+    "multer": "^2.0.0",
     "node-cron": "^4.0.7",
     "socket.io": "^4.8.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
+    "vite": "^6.3.5",
     "zod": "^3.24.4"
   },
   "devDependencies": {
@@ -48,6 +51,7 @@
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/multer": "^1.4.12",
     "@types/node-cron": "^3.0.11",
     "concurrently": "^9.1.2",
     "rimraf": "^6.0.1",
