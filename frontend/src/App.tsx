@@ -1,16 +1,16 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HomePage } from './components/Home';
+import { BackupDashboard } from './components/BackupDashboard';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div>
-      
-    </div>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/dashboard" element={<BackupDashboard />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;

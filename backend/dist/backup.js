@@ -72,6 +72,15 @@ class BackupDatabase {
             archive.finalize();
         });
     }
+    async cleanupUncompressedBackup(backupDir) {
+        try {
+            await fs_1.promises.rm(backupDir, { recursive: true, force: true });
+            logger_1.log.info(`Cleaned up uncompressed backup: ${backupDir}`);
+        }
+        catch (error) {
+            logger_1.log.error(`Failed to cleanup uncompressed backup: ${error.message}`);
+        }
+    }
     async runBackup() {
         logger_1.log.info(`Starting backup for ${config_1.config.dbName}...`);
         if (!config_1.config.dbUri || !config_1.config.dbName) {
@@ -93,6 +102,7 @@ class BackupDatabase {
                     try {
                         logger_1.log.success(`Backup successful: ${backupDir}`);
                         await this.zipDir(backupDir);
+                        await this.cleanupUncompressedBackup(backupDir);
                         resolve();
                     }
                     catch (zipError) {

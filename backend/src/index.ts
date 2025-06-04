@@ -5,8 +5,17 @@ import { log } from "./logger";
 
 export async function main() {
     try {
-        await config.setBackupLocation();
+        console.log("🔧 MongoDB Backup Utility Configuration");
+        console.log("=====================================");
 
+        await config.init();
+
+        const isValid = await config.validateConnection();
+        if (!isValid) {
+            console.log("❌ Configuration cancelled by user");
+            process.exit(0);
+        }
+        
         const backup = new BackupDatabase();
 
         // Run initial backup immediately
@@ -31,8 +40,6 @@ export async function main() {
 
         console.log("📅 Backup scheduler is running...");
         console.log(`📍 Backups will be stored in: ${config.backupDir}`);
-        // console.log(`⏰ Schedule: ${config.schedule}`);
-        // console.log("🎯 Press Ctrl+C to stop the scheduler");
 
         process.on("SIGINT", () => {
             console.log('\n👋 Gracefully shutting down backup scheduler...');

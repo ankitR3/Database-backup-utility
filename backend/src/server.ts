@@ -11,15 +11,12 @@ import { log } from "./logger";
 dotenv.config();
 validateEnv();
 
-import userSigninRouter from "./routes/userSignin";
-import userSignupRouter from "./routes/userSignup";
-import userSignoutRouter from "./routes/userSignout";
+import userAuthRouter from "./routes/userAuth";
+import adminAuthRouter from "./routes/adminAuth";
 import dashboardRouter from "./routes/dashboard";
-import adminSigninRouter from "./routes/adminSignin";
-import adminSignoutRouter from "./routes/adminSignout";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 1515;
 
 // Backup system state
 let isBackupSchedulerRunning = false;
@@ -30,24 +27,40 @@ let scheduledTask: ScheduledTask | null = null;
 app.use(cors());
 app.use(express.json());
 
-// Database connection 
-mongoose.connect(process.env.DB_URI + process.env.DB_NAME)
-    .then(() => {
-        console.log("✅ Connected to MongoDB");
-        initializeBackupSystem();
-    })
-    .catch((err) => {
-        console.error("❌ MongoDB connection error:", err);
-    });
+const initializeSystem = async (): Promise<void> => {
+    try {
+        console.log("MongoDB Backup Utility Configuration");
+        console.log("=====================================");
+
+        await config.init();
+
+        const isValid = await config.validateConnection();
+        if (!isValid) {
+            console.log("Configuration cancelled by user");
+            process.exit(0);
+        }
+
+        const mongoUri = config.dbUri + (config.dbUri.endsWith("/") ? "" : "/") + config.dbName;
+        console.log("Connecting to MongoDB");
+
+        await mongoose.connect(mongoUri);
+        console.log("Connected to MongoDB");
+
+        await initializeBackupSystem();
+    } catch (error) {
+        console.log("System initialization failed:", error);
+        process.exit(1);
+    }
+};
 
     const initializeBackupSystem = async (): Promise<boolean> => {
         try {
             await config.setBackupLocation();
             backupInstance = new BackupDatabase();
-            console.log("✅ Backup system initialized");
+            console.log("Backup system initialized");
             return true;
         } catch (error) {
-            console.error("❌ Failed to initialize backup system:", error);
+            console.error("Failed to initialize backup system:", error);
             return false;
         }
     };
@@ -60,7 +73,7 @@ const startBackupScheduler = async (): Promise<void> => {
         }
 
         if (isBackupSchedulerRunning) {
-            console.log("⚠️ Backup scheduler is already running");
+            console.log("Backup scheduler is already running");
             return;
         }
 
@@ -70,18 +83,18 @@ const startBackupScheduler = async (): Promise<void> => {
         }
 
         // Run initial backup
-        console.log("🚀 Running initial backup...");
+        console.log("Running initial backup...");
         await backupInstance.runBackup();
 
         // Set up scheduled backups
-        console.log("📅 Setting up backup scheduler...");
+        console.log("Setting up backup scheduler...");
         scheduledTask = cron.schedule(config.schedule, async () => {
             try {
-                log.info("🔄 Starting scheduled backup...");
+                log.info("Starting scheduled backup...");
                 
                 if (backupInstance) {
                     await backupInstance.runBackup();
-                    log.info("✨ Scheduled backup completed successfully");
+                    log.info("Scheduled backup completed successfully");
                 } else {
                     log.error("Backup instance is nul - cannot run scheduled backup");
                 }
@@ -91,12 +104,12 @@ const startBackupScheduler = async (): Promise<void> => {
         });
 
         isBackupSchedulerRunning = true;
-        console.log("📅 Backup scheduler is running...");
-        console.log(`📍 Backups will be stored in: ${config.backupDir}`);
-        console.log(`⏰ Schedule: ${config.schedule}`);
+        console.log("Backup scheduler is running...");
+        console.log(`Backups will be stored in: ${config.backupDir}`);
+        console.log(`Schedule: ${config.schedule}`);
 
     } catch (error) {
-        console.error("❌ Failed to start backup scheduler:", error);
+        console.error("Failed to start backup scheduler:", error);
         throw error;
     }
 };
@@ -107,16 +120,13 @@ const stopBackupScheduler = (): void => {
         scheduledTask = null;
     }
     isBackupSchedulerRunning = false;
-    console.log("📅 Backup scheduler stopped");
+    console.log("Backup scheduler stopped");
 };
 
 
     // Routes
-    app.use("/api/auth", userSigninRouter);
-    app.use("/api/auth", userSignupRouter);
-    app.use("/api/auth", userSignoutRouter);
-    app.use("/api/auth", adminSigninRouter);
-    app.use("/api/auth", adminSignoutRouter);
+    app.use("/api/auth", userAuthRouter);
+    app.use("/api/auth", adminAuthRouter);
     app.use("/api", dashboardRouter);
 
     // New backup API routes
@@ -140,7 +150,7 @@ const stopBackupScheduler = (): void => {
             return;
         }
 
-            log.info("🔄 Manual backup triggered via API");
+            log.info("Manual backup triggered via API");
             await backupInstance.runBackup();
 
             res.json({
@@ -158,7 +168,7 @@ const stopBackupScheduler = (): void => {
         }
     });
 
-    // Start backup scheduler (your main function)
+    // Start backup scheduler
     app.post("/api/backup/start-scheduler", async (req: Request, res: Response): Promise<void> => {
         try {
             if (isBackupSchedulerRunning) {
@@ -262,17 +272,17 @@ const stopBackupScheduler = (): void => {
 
     // Graceful shutdown
     const gracefulShutdown = async (): Promise<void> => {
-        console.log("\n👋 Gracefully shutting down server...");
+        console.log("\n Gracefully shutting down server...");
 
         try {
 
             stopBackupScheduler();
 
             await mongoose.connection.close();
-            console.log("📦 MongoDB connection closed"); 
+            console.log("MongoDB connection closed"); 
             process.exit(0);
         } catch (error) {
-            console.error("❌ Error closing MongoDB connection:", error);
+            console.error("Error closing MongoDB connection:", error);
             process.exit(1);
         }
     };
@@ -291,12 +301,24 @@ const stopBackupScheduler = (): void => {
         process.exit(1);
     });
 
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`📊 Backup directory: ${config.backupDir}`);
-        console.log(`⏰ Backup schedule: ${config.schedule}`);
-        console.log("💡 Use /api/backup/start-scheduler to start automated backups");
-    });
+    const startServer = async (): Promise<void> => {
+        try {
+
+            await initializeSystem();
+
+            app.listen(PORT, () => {
+                console.log(`Server running on port ${PORT}`);
+                console.log(`Backup directory: ${config.backupDir}`);
+                console.log(`Backup schedule: ${config.schedule}`);
+                console.log("Use /api/backup/start-scheduler to start automated backups");
+            });
+        } catch (error) {
+            console.log("Failed to start server:", error);
+            process.exit(1);
+        }
+    };
+
+    startServer();
 
 
     export default app;

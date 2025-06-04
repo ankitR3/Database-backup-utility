@@ -10,7 +10,14 @@ const backup_1 = require("./backup");
 const logger_1 = require("./logger");
 async function main() {
     try {
-        await config_1.config.setBackupLocation();
+        console.log("🔧 MongoDB Backup Utility Configuration");
+        console.log("=====================================");
+        await config_1.config.init();
+        const isValid = await config_1.config.validateConnection();
+        if (!isValid) {
+            console.log("❌ Configuration cancelled by user");
+            process.exit(0);
+        }
         const backup = new backup_1.BackupDatabase();
         console.log("🚀 Running initial backup...");
         await backup.runBackup();

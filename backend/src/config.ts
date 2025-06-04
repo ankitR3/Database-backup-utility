@@ -6,16 +6,63 @@ import path from "path";
 dotenv.config();
 
 class BackupConfig {
-    public dbUri: string;
-    public dbName: string;
+    public dbUri: string = "";
+    public dbName: string = "";
     public backupDir: string;
     public schedule: string;
 
     constructor() {
-        this.dbUri = process.env.DB_URI || "";
-        this.dbName = process.env.DB_NAME || "";
         this.backupDir = process.env.BACKUP_DIR || "./backups";
         this.schedule = process.env.SCHEDULE || "*/30 * * * *";
+    }
+
+    public async init(): Promise<void> {
+        this.dbUri = await this.promptForMongoUri();
+        this.dbName = await this.promptForDbName();
+        await this.setBackupLocation();
+    }
+
+    public async promptForMongoUri(): Promise<string> {
+        const { uri } = await inquirer.prompt([
+            {
+                type: "input",
+                name: "uri",
+                message: "Enter your MongoDB connection URI:",
+                validate: (input: string) => {
+                    if (!input.trim()) {
+                        return "MongoDB URI is required";
+                    }
+                    return input.startsWith("mongodb://") || input.startsWith("mongodb+srv://")
+                    ? true
+                    : "Invalid MongoDB URI. Must start with mongodb:// or mongodb+srv://";
+                },
+            },
+        ]);
+
+        return uri.trim();
+    }
+
+    public async promptForDbName(): Promise<string> {
+        const { dbName } = await inquirer.prompt([
+            {
+                type: "input",
+                name: "dbName",
+                message: "Enter your database name:",
+                validate: (input: string) => {
+                    if (!input.trim()) {
+                        return "Database name is required";
+                    }
+
+                    const invalidChars = /[\/\\. "$*<>:|?]/;
+                    if (invalidChars.test(input)) {
+                        return "Database name contains invalid characters";
+                    }
+                    return true;
+                },
+            },
+        ]);
+
+        return dbName.trim();
     }
 
     async promptForBackupLocation(): Promise<string> {
@@ -119,6 +166,28 @@ class BackupConfig {
         const selected = await this.promptForBackupLocation();
         this.backupDir = path.resolve(selected);
         console.log(`✅ Backup location set to: ${this.backupDir}`);
+    }
+
+    public async validateConnection(): Promise<boolean> {
+        if (!this.dbUri || !this.dbName) {
+            console.log("❌ Missing MongoDB URI or database name");
+            return false;
+        }
+
+        console.log(`🔗 MongoDB URI: ${this.dbUri}`);
+        console.log(`📊 Database Name: ${this.dbName}`);
+        console.log(`📁 Backup Directory: ${this.backupDir}`);
+
+        const { proceed } = await inquirer.prompt([
+            {
+                type: "confirm",
+                name: "proceed",
+                message: "Do you want to proceed with these settings?",
+                default: true,
+            }
+        ]);
+
+        return proceed;
     }
 }
 

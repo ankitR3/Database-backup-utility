@@ -8,6 +8,8 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const adminSchema_1 = require("../db/adminSchema");
 const AdminSigninSchema_1 = require("../zod/AdminSigninSchema");
+const tokenBlacklist_1 = require("../db/tokenBlacklist");
+const adminMiddleware_1 = require("../middleware/adminMiddleware");
 const router = express_1.default.Router();
 router.post("/admin/signin", async (req, res) => {
     try {
@@ -19,8 +21,8 @@ router.post("/admin/signin", async (req, res) => {
             });
             return;
         }
-        const { username, password } = parsedData.data;
-        const admin = await adminSchema_1.Admin.findOne({ email: username });
+        const { username, email, password } = parsedData.data;
+        const admin = await adminSchema_1.Admin.findOne({ email, username });
         if (!admin) {
             res.status(401).json({
                 error: "Invalid credentials"
@@ -38,9 +40,7 @@ router.post("/admin/signin", async (req, res) => {
             userId: admin._id,
             email: admin.email,
             role: admin.role
-        }, process.env.JWT_SECRET, {
-            expiresIn: "1h"
-        });
+        }, process.env.JWT_SECRET, { expiresIn: "1h" });
         res.status(200).json({
             message: "Admin signin successful",
             token,
@@ -54,5 +54,43 @@ router.post("/admin/signin", async (req, res) => {
         });
     }
 });
+router.post("/admin/signout", adminMiddleware_1.adminMiddleware, async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            res.status(400).json({
+                error: "No token provided"
+            });
+            return;
+        }
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        if (!decoded || !decoded.exp) {
+            res.status(400).json({
+                error: "Invalid token"
+            });
+            return;
+        }
+        const existingBlacklist = await tokenBlacklist_1.TokenBlacklist.findOne({ token });
+        if (existingBlacklist) {
+            res.status(200).json({
+                message: "Already signed out"
+            });
+            return;
+        }
+        await tokenBlacklist_1.TokenBlacklist.create({
+            token: token,
+            expiresAt: new Date(decoded.exp * 1000)
+        });
+        res.status(200).json({
+            message: "Admin signed out successfully"
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            error: "Admin signout failed",
+            details: error
+        });
+    }
+});
 exports.default = router;
-//# sourceMappingURL=adminSignin.js.map
+//# sourceMappingURL=adminAuth.js.map
