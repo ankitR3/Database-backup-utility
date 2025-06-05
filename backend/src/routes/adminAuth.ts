@@ -25,9 +25,10 @@ router.post("/admin/signin", async (req: Request, res: Response): Promise<void> 
             return;
         }
 
-        const { username, email, password} = parsedData.data;
+        const { email, password } = parsedData.data;
 
-        const admin = await Admin.findOne({ email, username });
+        // Find admin by email only (removed username requirement)
+        const admin = await Admin.findOne({ email });
         if (!admin) {
             res.status(401).json({
                 error: "Invalid credentials"

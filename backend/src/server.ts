@@ -3,24 +3,22 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cron, { ScheduledTask } from "node-cron";
-import { validateEnv } from "./utils/validateEnv";
-import { BackupDatabase } from "./backup";
+import { BackupService } from "./backup";
 import { config } from "./config";
-import { log } from "./logger";
 
 dotenv.config();
-validateEnv();
 
 import userAuthRouter from "./routes/userAuth";
 import adminAuthRouter from "./routes/adminAuth";
 import dashboardRouter from "./routes/dashboard";
+import apiRouter from "./routes/apiRoutes"
 
 const app = express();
 const PORT = process.env.PORT || 1515;
 
 // Backup system state
 let isBackupSchedulerRunning = false;
-let backupInstance: BackupDatabase | null = null;
+let backupInstance: BackupService | null = null;
 let scheduledTask: ScheduledTask | null = null;
 
 // Middleware
@@ -29,23 +27,14 @@ app.use(express.json());
 
 const initializeSystem = async (): Promise<void> => {
     try {
-        console.log("MongoDB Backup Utility Configuration");
-        console.log("=====================================");
+        console.log("MongoDB Backup Utility Starting...");
+        
+        // Connect to your system database (for user management)
+        const systemDbUri = process.env.SYSTEM_DB_URI || "mongodb+srv://ankit:OMgJsOfYE3e2R4HN@cluster0.xwvxfxn.mongodb.net/mybackup";
+        await mongoose.connect(systemDbUri);
+        console.log("Connected to system database");
 
-        await config.init();
-
-        const isValid = await config.validateConnection();
-        if (!isValid) {
-            console.log("Configuration cancelled by user");
-            process.exit(0);
-        }
-
-        const mongoUri = config.dbUri + (config.dbUri.endsWith("/") ? "" : "/") + config.dbName;
-        console.log("Connecting to MongoDB");
-
-        await mongoose.connect(mongoUri);
-        console.log("Connected to MongoDB");
-
+        // Initialize backup system without config prompts
         await initializeBackupSystem();
     } catch (error) {
         console.log("System initialization failed:", error);
@@ -55,8 +44,7 @@ const initializeSystem = async (): Promise<void> => {
 
     const initializeBackupSystem = async (): Promise<boolean> => {
         try {
-            await config.setBackupLocation();
-            backupInstance = new BackupDatabase();
+            backupInstance = new BackupService();
             console.log("Backup system initialized");
             return true;
         } catch (error) {
@@ -90,16 +78,16 @@ const startBackupScheduler = async (): Promise<void> => {
         console.log("Setting up backup scheduler...");
         scheduledTask = cron.schedule(config.schedule, async () => {
             try {
-                log.info("Starting scheduled backup...");
+                console.log("Starting scheduled backup...");
                 
                 if (backupInstance) {
                     await backupInstance.runBackup();
-                    log.info("Scheduled backup completed successfully");
+                    console.log("Scheduled backup completed successfully");
                 } else {
-                    log.error("Backup instance is nul - cannot run scheduled backup");
+                    console.error("Backup instance is nul - cannot run scheduled backup");
                 }
             } catch (err) {
-                log.error("Scheduled backup failed:", err);
+                console.error("Scheduled backup failed:", err);
             }
         });
 
@@ -128,9 +116,10 @@ const stopBackupScheduler = (): void => {
     app.use("/api/auth", userAuthRouter);
     app.use("/api/auth", adminAuthRouter);
     app.use("/api", dashboardRouter);
+    app.use("/api/user", apiRouter)
 
     // New backup API routes
-    app.get("/api/backup/status", (req: Request, res: Response): void => {
+    app.get("/api/status/backup/status", (req: Request, res: Response): void => {
         res.json({
             schedulerRunning: isBackupSchedulerRunning,
             initialized: backupInstance !== null,
@@ -140,7 +129,7 @@ const stopBackupScheduler = (): void => {
         });
     });
 
-    app.post("/api/backup/trigger", async (req: Request, res: Response): Promise<void> => {
+    app.post("/api/system/backup/trigger", async (req: Request, res: Response): Promise<void> => {
         try {
             if (!backupInstance) {
             res.status(500).json({
@@ -150,7 +139,7 @@ const stopBackupScheduler = (): void => {
             return;
         }
 
-            log.info("Manual backup triggered via API");
+            console.log("Manual backup triggered via API");
             await backupInstance.runBackup();
 
             res.json({
@@ -159,7 +148,7 @@ const stopBackupScheduler = (): void => {
                 timestamp: new Date().toISOString()
             });
         } catch (error) {
-            log.error("Manual backup failed:", error);
+            console.error("Manual backup failed:", error);
             res.status(500).json({
                 success: false,
                 message: "Backup failed",
@@ -292,12 +281,12 @@ const stopBackupScheduler = (): void => {
 
     // Error handling
     process.on("uncaughtException", (error) => {
-        log.error("Uncaught Exception:", error);
+        console.error("Uncaught Exception:", error);
         process.exit(1);
     });
 
     process.on("unhandledRejection", (reason: unknown, promise: Promise<any>) => {
-        log.error("Unhandled Rejection at:", promise, "reason:", reason);
+        console.error("Unhandled Rejection at:", promise, "reason:", reason);
         process.exit(1);
     });
 

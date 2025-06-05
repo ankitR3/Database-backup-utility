@@ -39,16 +39,51 @@ const userSchema = new mongoose_1.Schema({
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        trim: true,
+        lowercase: true,
+        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
     },
     username: {
         type: String,
-        required: true
+        required: true,
+        unique: true,
+        trim: true,
+        minlength: 3,
+        maxlength: 50
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        minlength: 6
+    },
+    uuid: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    mongoUri: {
+        type: String,
+        default: null
+    },
+    dbName: {
+        type: String,
+        default: null
+    },
+    backupDir: {
+        type: String,
+        default: null
+    },
+    schedule: {
+        type: String,
+        default: "0 2 * * *"
+    },
+    isActive: {
+        type: Boolean,
+        default: true
     }
-}, { timestamps: true });
+}, {
+    timestamps: true
+});
 exports.User = mongoose_1.default.model("User", userSchema);
 //# sourceMappingURL=userSchema.js.map

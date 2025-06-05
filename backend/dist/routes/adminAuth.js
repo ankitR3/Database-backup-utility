@@ -21,8 +21,8 @@ router.post("/admin/signin", async (req, res) => {
             });
             return;
         }
-        const { username, email, password } = parsedData.data;
-        const admin = await adminSchema_1.Admin.findOne({ email, username });
+        const { email, password } = parsedData.data;
+        const admin = await adminSchema_1.Admin.findOne({ email });
         if (!admin) {
             res.status(401).json({
                 error: "Invalid credentials"

@@ -33,47 +33,49 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Admin = void 0;
+exports.Backup = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const adminSchema = new mongoose_1.Schema({
-    username: {
+const backupSchema = new mongoose_1.Schema({
+    userId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    userUuid: {
         type: String,
         required: true,
-        trim: true,
-        minlength: 3,
-        maxlength: 50
+        index: true
     },
-    email: {
+    dbName: {
         type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+        required: true
     },
-    password: {
+    backupPath: {
         type: String,
-        required: true,
-        minlength: 6
+        required: true
     },
-    uuid: {
-        type: String,
-        required: true,
-        unique: true
+    backupSize: {
+        type: Number,
+        default: 0
     },
-    apiKey: {
+    status: {
         type: String,
-        required: true,
-        unique: true
+        enum: ['pending', 'completed', 'failed'],
+        default: 'pending'
     },
-    role: {
+    errorMessage: {
         type: String,
-        enum: ['admin'],
-        default: 'admin'
+        default: null
+    },
+    completedAt: {
+        type: Date,
+        default: null
     }
 }, {
-    timestamps: true,
-    collection: 'admins'
+    timestamps: true
 });
-exports.Admin = mongoose_1.default.model('Admin', adminSchema);
-//# sourceMappingURL=adminSchema.js.map
+backupSchema.index({ userId: 1, createdAt: -1 });
+backupSchema.index({ userUuid: 1, createdAt: -1 });
+backupSchema.index({ status: 1 });
+exports.Backup = mongoose_1.default.model('Backup', backupSchema);
+//# sourceMappingURL=backupSchema.js.map

@@ -1,8 +1,12 @@
-import jwt from "jsonwebtoken";
-import { Request, Response, NextFunction} from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { Request, Response, NextFunction } from "express";
 import { TokenBlacklist } from "../db/tokenBlacklist";
 
-export const userAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const userAuthMiddleware = async (
+    req: Request, 
+    res: Response, 
+    next: NextFunction
+): Promise<void> => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -15,7 +19,6 @@ export const userAuthMiddleware = async (req: Request, res: Response, next: Next
     const token = authHeader.split(" ")[1];
 
     try {
-
         const blacklistedToken = await TokenBlacklist.findOne({ token });
         if (blacklistedToken) {
             res.status(401).json({
@@ -23,8 +26,11 @@ export const userAuthMiddleware = async (req: Request, res: Response, next: Next
             });
             return;
         }
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-        req.user = decoded;
+        
+        // Type assertion approach - tells TypeScript this property exists
+        (req as any).user = decoded;
         next();
     } catch (err) {
         res.status(403).json({

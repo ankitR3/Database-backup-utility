@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import inquirer from "inquirer";
 import { promises as fs } from "fs";
 import path from "path";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -14,12 +15,45 @@ class BackupConfig {
     constructor() {
         this.backupDir = process.env.BACKUP_DIR || "./backups";
         this.schedule = process.env.SCHEDULE || "*/30 * * * *";
+        this.dbUri = process.env.SYSTEM_DB_URI || "";
+        this.dbName = process.env.DB_NAME || "";
     }
 
     public async init(): Promise<void> {
-        this.dbUri = await this.promptForMongoUri();
-        this.dbName = await this.promptForDbName();
+        if (!this.dbUri) {
+            this.dbUri = await this.promptForMongoUri();
+        }
+        if (!this.dbName) {
+            this.dbName = await this.promptForDbName();
+        }
         await this.setBackupLocation();
+    }
+
+    public async validateConnection(): Promise<boolean> {
+        let attempts = 3;
+        while (attempts > 0) {
+            try {
+                await mongoose.connect(this.dbUri, { dbName: this.dbName });
+                console.log("✅ Connected to MongoDB successfully.");
+                await mongoose.disconnect();
+                return true;
+            } catch {
+                console.log("❌ MongoDB connection failed.");
+                const { retry } = await inquirer.prompt([
+                    {
+                        type: "confirm",
+                        name: "retry",
+                        message: "Retry entering connection details?",
+                        default: true,
+                    },
+                ]);
+                if (!retry) return false;
+                this.dbUri = await this.promptForMongoUri();
+                this.dbName = await this.promptForDbName();
+                attempts--;
+            }
+        }
+        return false;
     }
 
     public async promptForMongoUri(): Promise<string> {
@@ -61,7 +95,6 @@ class BackupConfig {
                 },
             },
         ]);
-
         return dbName.trim();
     }
 
@@ -100,15 +133,14 @@ class BackupConfig {
 
                             try {
                                 const absolutePath = path.resolve(input);
-                                // Check if parent directory exists
                                 const parentDir = path.dirname(absolutePath);
                                 await fs.access(parentDir);
                                 return true;
                             } catch {
                                 return "Invalid path or parent directory does not exist";
                             }
-                        }
-                    }
+                        },
+                    },
                 ]);
                 return path.resolve(customAnswer.customPath);
 
@@ -165,29 +197,7 @@ class BackupConfig {
     async setBackupLocation(): Promise<void> {
         const selected = await this.promptForBackupLocation();
         this.backupDir = path.resolve(selected);
-        console.log(`✅ Backup location set to: ${this.backupDir}`);
-    }
-
-    public async validateConnection(): Promise<boolean> {
-        if (!this.dbUri || !this.dbName) {
-            console.log("❌ Missing MongoDB URI or database name");
-            return false;
-        }
-
-        console.log(`🔗 MongoDB URI: ${this.dbUri}`);
-        console.log(`📊 Database Name: ${this.dbName}`);
-        console.log(`📁 Backup Directory: ${this.backupDir}`);
-
-        const { proceed } = await inquirer.prompt([
-            {
-                type: "confirm",
-                name: "proceed",
-                message: "Do you want to proceed with these settings?",
-                default: true,
-            }
-        ]);
-
-        return proceed;
+        console.log(`Backup location set to: ${this.backupDir}`);
     }
 }
 

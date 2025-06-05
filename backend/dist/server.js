@@ -8,15 +8,13 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const node_cron_1 = __importDefault(require("node-cron"));
-const validateEnv_1 = require("./utils/validateEnv");
 const backup_1 = require("./backup");
 const config_1 = require("./config");
-const logger_1 = require("./logger");
 dotenv_1.default.config();
-(0, validateEnv_1.validateEnv)();
 const userAuth_1 = __importDefault(require("./routes/userAuth"));
 const adminAuth_1 = __importDefault(require("./routes/adminAuth"));
 const dashboard_1 = __importDefault(require("./routes/dashboard"));
+const apiRoutes_1 = __importDefault(require("./routes/apiRoutes"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 1515;
 let isBackupSchedulerRunning = false;
@@ -26,18 +24,10 @@ app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 const initializeSystem = async () => {
     try {
-        console.log("MongoDB Backup Utility Configuration");
-        console.log("=====================================");
-        await config_1.config.init();
-        const isValid = await config_1.config.validateConnection();
-        if (!isValid) {
-            console.log("Configuration cancelled by user");
-            process.exit(0);
-        }
-        const mongoUri = config_1.config.dbUri + (config_1.config.dbUri.endsWith("/") ? "" : "/") + config_1.config.dbName;
-        console.log("Connecting to MongoDB");
-        await mongoose_1.default.connect(mongoUri);
-        console.log("Connected to MongoDB");
+        console.log("MongoDB Backup Utility Starting...");
+        const systemDbUri = process.env.SYSTEM_DB_URI || "mongodb+srv://ankit:OMgJsOfYE3e2R4HN@cluster0.xwvxfxn.mongodb.net/";
+        await mongoose_1.default.connect(systemDbUri);
+        console.log("Connected to system database");
         await initializeBackupSystem();
     }
     catch (error) {
@@ -47,8 +37,7 @@ const initializeSystem = async () => {
 };
 const initializeBackupSystem = async () => {
     try {
-        await config_1.config.setBackupLocation();
-        backupInstance = new backup_1.BackupDatabase();
+        backupInstance = new backup_1.BackupService();
         console.log("Backup system initialized");
         return true;
     }
@@ -74,17 +63,17 @@ const startBackupScheduler = async () => {
         console.log("Setting up backup scheduler...");
         scheduledTask = node_cron_1.default.schedule(config_1.config.schedule, async () => {
             try {
-                logger_1.log.info("Starting scheduled backup...");
+                console.log("Starting scheduled backup...");
                 if (backupInstance) {
                     await backupInstance.runBackup();
-                    logger_1.log.info("Scheduled backup completed successfully");
+                    console.log("Scheduled backup completed successfully");
                 }
                 else {
-                    logger_1.log.error("Backup instance is nul - cannot run scheduled backup");
+                    console.error("Backup instance is nul - cannot run scheduled backup");
                 }
             }
             catch (err) {
-                logger_1.log.error("Scheduled backup failed:", err);
+                console.error("Scheduled backup failed:", err);
             }
         });
         isBackupSchedulerRunning = true;
@@ -108,7 +97,8 @@ const stopBackupScheduler = () => {
 app.use("/api/auth", userAuth_1.default);
 app.use("/api/auth", adminAuth_1.default);
 app.use("/api", dashboard_1.default);
-app.get("/api/backup/status", (req, res) => {
+app.use("/api/user", apiRoutes_1.default);
+app.get("/api/status/backup/status", (req, res) => {
     res.json({
         schedulerRunning: isBackupSchedulerRunning,
         initialized: backupInstance !== null,
@@ -117,7 +107,7 @@ app.get("/api/backup/status", (req, res) => {
         timestamp: new Date().toISOString()
     });
 });
-app.post("/api/backup/trigger", async (req, res) => {
+app.post("/api/system/backup/trigger", async (req, res) => {
     try {
         if (!backupInstance) {
             res.status(500).json({
@@ -126,7 +116,7 @@ app.post("/api/backup/trigger", async (req, res) => {
             });
             return;
         }
-        logger_1.log.info("Manual backup triggered via API");
+        console.log("Manual backup triggered via API");
         await backupInstance.runBackup();
         res.json({
             success: true,
@@ -135,7 +125,7 @@ app.post("/api/backup/trigger", async (req, res) => {
         });
     }
     catch (error) {
-        logger_1.log.error("Manual backup failed:", error);
+        console.error("Manual backup failed:", error);
         res.status(500).json({
             success: false,
             message: "Backup failed",
@@ -252,11 +242,11 @@ const gracefulShutdown = async () => {
 process.on("SIGTERM", gracefulShutdown);
 process.on("SIGINT", gracefulShutdown);
 process.on("uncaughtException", (error) => {
-    logger_1.log.error("Uncaught Exception:", error);
+    console.error("Uncaught Exception:", error);
     process.exit(1);
 });
 process.on("unhandledRejection", (reason, promise) => {
-    logger_1.log.error("Unhandled Rejection at:", promise, "reason:", reason);
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
     process.exit(1);
 });
 const startServer = async () => {
