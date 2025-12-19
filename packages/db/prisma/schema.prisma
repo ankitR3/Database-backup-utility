@@ -14,28 +14,35 @@ datasource db {
 
 model User {
   id          String    @id @default(cuid())
+  uuid        String    @unique @default(uuid())
   name        String
   email       String    @unique
-  image       String?
   username    String    @unique
   password    String
-  uuid        String    @unique
+  image       String?
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
 
 model Admin {
-  id          String    @id @default(cuid())
+  id          String    @id     @default(cuid())
+  uuid        String    @unique @default(uuid())
   name        String
   email       String    @unique
-  image       String?
-  usernme     String    @unique
+  username    String    @unique
   password    String
-  uuid        String    @unique
   apiKey      String    @unique
-  role        String    @default("admin")
+  role        AdminRole @default(admin)
+  image       String?
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@map("admins")
+}
+
+enum AdminRole {
+  admin
+  superadmin
 }
