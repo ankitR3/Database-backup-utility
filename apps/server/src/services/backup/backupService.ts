@@ -1,6 +1,6 @@
 import { BackupInput } from '../../types/backup.types';
-import { mongoBackup } from './mongoBackup';
-import { postgresBackup } from './postgresBackup';
+import { mongoBackup } from './mongo.backup';
+import { postgresBackup } from './postgres.backup';
 
 export async function createBackup(input: BackupInput) {
     switch (input.type) {

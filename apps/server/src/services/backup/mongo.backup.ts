@@ -22,7 +22,7 @@ export async function mongoBackup(input: BackupInput) {
 
     await fs.mkdir(baseDir, { recursive: true });
 
-    const dumpCmd = `mongodump --uri="${mongoUri}" --db=${mongoDbName} --out=${baseDir}`;
+    const dumpCmd = `mongodump --uri="${mongoUri}" --db="${mongoDbName}" --out="${baseDir}"`;
     await execPromise(dumpCmd);
 
     const tarPath = `${baseDir}.tar.gz`;

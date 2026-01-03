@@ -24,7 +24,7 @@ export async function postgresBackup(input: BackupInput) {
 
     const sqlPath = path.join(baseDir, `${pgDbName}.sql`);
 
-    const dumpCmd = `pg_dump "${pgUri}" --dbname=${pgDbName} --file="${sqlPath}"`;
+    const dumpCmd = `pg_dump "${pgUri}" --file="${sqlPath}"`;
     await execPromise(dumpCmd);
 
     const encPath = `${sqlPath}.enc`;
