@@ -11,6 +11,11 @@ export async function postgresBackup(input: BackupInput) {
         throw new Error("POSTGRES_CONFIG_MISSING");
     }
 
+    const pgDumpPath = process.env.PG_DUMP_PATH;
+    if (!pgDumpPath) {
+        throw new Error("PG_DUMP_PATH_ERROR");
+    }
+
     const baseDir = path.join(
         process.cwd(),
         "backups",
@@ -23,17 +28,20 @@ export async function postgresBackup(input: BackupInput) {
     await fs.mkdir(baseDir, { recursive: true });
 
     const sqlPath = path.join(baseDir, `${pgDbName}.sql`);
-
-    const dumpCmd = `pg_dump "${pgUri}" --file="${sqlPath}"`;
-    await execPromise(dumpCmd);
-
     const encPath = `${sqlPath}.enc`;
-    await encryptFile(sqlPath, encPath);
 
+    await execPromise(pgDumpPath, [
+        "--dbname",
+        pgUri,
+        "--file",
+        sqlPath,
+    ]);
+
+    await encryptFile(sqlPath, encPath);
     await fs.rm(sqlPath, { force: true });
 
     return {
         type: "postgres",
         encryptFilePath: encPath,
-    }
+    };
 }

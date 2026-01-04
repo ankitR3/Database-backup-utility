@@ -1,13 +1,22 @@
-import { exec } from 'node:child_process';
+import { execFile } from 'node:child_process';
 
-export function execPromise(command: string): Promise<void> {
+export function execPromise(file: string, args: string[]): Promise<void> {
     return new Promise((resolve, reject) => {
-        exec(command, (error) => {
+        execFile(file, args, { windowsHide: true }, (error, stdout, stderr) => {
+            if (stdout?.trim()) {
+                console.log('STDOUT: ', stdout);
+            }
+
+            if (stderr?.trim()) {
+                console.error('STDERR', stderr);
+            }
+
             if (error) {
                 reject(error);
-            } else {
-                resolve();
+                return;
             }
+
+            resolve();
         });
     });
 }

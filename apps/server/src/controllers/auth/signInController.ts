@@ -3,16 +3,22 @@ import jwt from 'jsonwebtoken';
 import { signInOrSignUp } from '../../services/authService';
 
 export default async function signInController(req: Request, res: Response) {
-    const { user } = req.body;
+    const { email, password, name, username, image } = req.body;
 
-    if (!user?.email || !user.password) {
+    if (!email || !password) {
         return res.status(400).json({
             message: 'Email and password is required'
         });
     }
 
     try {
-        const myUser = await signInOrSignUp(user);
+        const myUser = await signInOrSignUp({
+            email,
+            password,
+            name,
+            username,
+            image,
+        });
 
         const secret = process.env.JWT_SECRET;
         if (!secret) {

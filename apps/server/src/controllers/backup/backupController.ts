@@ -14,6 +14,12 @@ export async function createBackupController(req: Request, res: Response) {
 
         const { type, mongoUri, mongoDbName, pgUri, pgDbName } = req.body;
 
+        if (!['mongo', 'postgres'].includes(type)) {
+            return res.status(400).json({
+                message: 'Invalid backup type'
+            });
+        }
+
         const input: BackupInput = {
             userId: String(userId),
             type,
@@ -40,6 +46,12 @@ export async function createBackupController(req: Request, res: Response) {
         if (err.message === 'POSTGRES_CONFIG_MISSING') {
             return res.status(400).json({
                 message: 'Postgres config missing'
+            });
+        }
+
+        if (err.message === 'PG_DUMP_PATH_ERROR') {
+            return res.status(500).json({
+                message: 'pg_dump not configured on server'
             });
         }
 
