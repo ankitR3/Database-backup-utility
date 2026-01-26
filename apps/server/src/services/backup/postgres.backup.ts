@@ -16,7 +16,7 @@ export async function postgresBackup(input: BackupInput) {
         throw new Error("PG_DUMP_PATH_ERROR");
     }
 
-    const baseDir = path.join(
+    const outputDir = path.join(
         process.cwd(),
         "backups",
         userId,
@@ -24,11 +24,21 @@ export async function postgresBackup(input: BackupInput) {
         pgDbName,
         Date.now().toString()
     );
+    await fs.mkdir(outputDir, { recursive: true });
 
-    await fs.mkdir(baseDir, { recursive: true });
+    const tempDir = path.join(
+        process.cwd(),
+        'tmp',
+        'backups',
+        userId,
+        'postgres',
+        pgDbName,
+        Date.now().toString()
+    );
+    await fs.mkdir(tempDir, { recursive: true });
 
-    const sqlPath = path.join(baseDir, `${pgDbName}.sql`);
-    const encPath = `${sqlPath}.enc`;
+    const sqlPath = path.join(tempDir, `${pgDbName}.sql`);
+    const encPath = path.join(outputDir, `${Date.now()}-${pgDbName}.sql.enc`);
 
     await execPromise(pgDumpPath, [
         "--dbname",
@@ -38,7 +48,7 @@ export async function postgresBackup(input: BackupInput) {
     ]);
 
     await encryptFile(sqlPath, encPath);
-    await fs.rm(sqlPath, { force: true });
+    await fs.rm(tempDir, { recursive: true, force: true });
 
     return {
         type: "postgres",

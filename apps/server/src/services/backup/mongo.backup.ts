@@ -1,8 +1,8 @@
-import path from "node:path";
+import path from 'node:path';
 import fs from 'node:fs/promises';
-import { execPromise } from "../../utils/exec";
-import { encryptFile } from "../../utils/encrypt";
-import { BackupInput } from "../../types/backup.types";
+import { execPromise } from '../../utils/exec';
+import { encryptFile } from '../../utils/encrypt';
+import { BackupInput } from '../../types/backup.types';
 
 export async function mongoBackup(input: BackupInput) {
     const { mongoUri, mongoDbName, userId} = input;
@@ -16,37 +16,45 @@ export async function mongoBackup(input: BackupInput) {
         throw new Error('MONGO_DUMP_PATH_ERROR');
     }
 
-    const baseDir = path.join(
+    // output folder
+    const outputDir = path.join(
         process.cwd(),
-        "backups",
+        'backups',
         userId,
-        "mongo",
+        'mongo',
         mongoDbName,
         Date.now().toString()
     );
+    await fs.mkdir(outputDir, { recursive: true });
 
-    await fs.mkdir(baseDir, { recursive: true });
+    const tempDir = path.join(
+        process.cwd(),
+        'tmp',
+        'backups',
+        userId,
+        'mongo',
+        mongoDbName,
+        Date.now().toString()
+    );
+    await fs.mkdir(tempDir, { recursive: true });
 
     await execPromise(mongoDumpPath, [
         `--uri=${mongoUri}`,
         `--db=${mongoDbName}`,
-        `--out=${baseDir}`,
+        `--out=${tempDir}`,
     ]);
 
-    const tarPath = path.join(baseDir, `${mongoDbName}.tar.gz`);
-    await execPromise("tar", [
-        "-czf",
-        tarPath,
-        "-C",
-        baseDir,
-        ".",
-    ]);
+    // tar should be created outside temp folder
+    const tarPath = path.join(outputDir, `${Date.now()}-${mongoDbName}.tar.gz`);
+    await execPromise('tar', ['-czf', tarPath, '-C', tempDir, '.']);
 
+    // encrypt tar
     const encPath = `${tarPath}.enc`;
     await encryptFile(tarPath, encPath);
 
+    // remove raw tar + temp dump directory
     await fs.rm(tarPath, { force: true });
-    await fs.rm(baseDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true });
 
     return {
         type: "mongo",
