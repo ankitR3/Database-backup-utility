@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '@repo/db';
+import prisma from '@repo/db';
 
 export async function createBackupConfigController(req: Request, res: Response) {
     const userId = req.user?.id;

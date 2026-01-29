@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { prisma } from '@repo/db';
+import prisma from '@repo/db';
 import { createBackup } from '../../services/backup/backupService';
 
 type ScheduledTask = ReturnType<typeof cron.schedule>;
