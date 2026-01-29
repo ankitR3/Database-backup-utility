@@ -1,29 +1,29 @@
 'use client'
 
+import { Around } from "@theme-toggles/react"
+import "@theme-toggles/react/css/Around.css"
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react"
+
 export default function ThemeToggle() {
-    function toggleTheme() {
-        document.documentElement.classList.toggle('dark')
-    }
+    const [dark, setDark] = useState(false)
+    
+    useEffect(() => {
+        if (dark) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    }, [dark])
+    
     return (
-        <button
-            onClick={toggleTheme}
-            type="button"
-            title="Toggle theme"
-            aria-label="Toggle theme"
-            className="p-2 pr-5"
-        >
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-            width="22"
-            height="22"
-            fill="currentColor"
-            viewBox="0 0 32 32"
-            className="text-gray-800 dark:text-gray-200 transition-transform duration-150 dark:rotate-180"
-        >
-            <path d="M27.5 11.5v-7h-7L16 0l-4.5 4.5h-7v7L0 16l4.5 4.5v7h7L16 32l4.5-4.5h7v-7L32 16l-4.5-4.5zM16 25.4a9.39 9.39 0 1 1 0-18.8 9.39 9.39 0 1 1 0 18.8z" />
-            <circle cx="16" cy="16" r="8.1" />
-        </svg>
-        </button>
+        // @ts-ignore
+        <Around 
+            duration={750}
+            toggled={dark}
+            toggle={() => setDark(!dark)}
+            className="text-gray-800 dark:text-gray-200 pr-3"
+            style={{ fontSize: '27px' }}
+        />
     )
 }
