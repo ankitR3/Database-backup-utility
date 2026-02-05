@@ -6,21 +6,28 @@ import { useState } from 'react';
 
 export default function() {
   const [selectedType, setSelectedType] = useState<'mongo' | 'postgres' | null>(null);
+
+  function selectHandler(type: 'mongo' | 'postgres') {
+    setSelectedType(prev => (prev === type ? null : type))
+  }
   return (
     <div className='space-y-10'>
-      {/* Cards section */}
-        <div className='grid grid-cols md:grid-cols-2 gap-6'>
+        <div className='grid grid-cols md:grid-cols-2 gap-7 max-w-xl'>
+
           <ConfigCard
             title='MongoDB backups'
-            description='Configure scheduled Mongo backups'
-            onClick={() => setSelectedType('mongo')}
+            description='Configure for Mongo Backup'
+            active={selectedType === 'mongo'}
+            onClick={() => selectHandler('mongo')}
           />
 
           <ConfigCard
             title="Postgres Backups"
-            description="Configure scheduled Postgres backups"
-            onClick={() => setSelectedType("postgres")}
+            description="Configure for Postgres Backup"
+            active={selectedType === 'postgres'}
+            onClick={() => selectHandler("postgres")}
           />
+
         </div>
         {selectedType && (
           <BackupConfigForm type={selectedType} />

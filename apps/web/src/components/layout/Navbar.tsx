@@ -17,7 +17,7 @@ export default function Navbar() {
     const title = titleMap[pathname] || 'Dashboard'
 
     return (
-        <header className='flex items-center justify-between px-8 py-4 bg-gray-300 dark:bg-[#15172A] text-gray-900 dark:text-gray-100'>
+        <header className='flex items-center justify-between px-8 py-4 bg-gray-300 dark:bg-[#12121E] text-gray-900 dark:text-gray-100'>
 
             {/* Page Title */}
             <h1 className='text-2xl font-semibold'>{title}</h1>
