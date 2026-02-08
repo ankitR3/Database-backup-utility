@@ -3,21 +3,19 @@ import jwt from 'jsonwebtoken';
 
 export default function authMiddleware(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer')) {
-        res.status(401).json({
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
             message: 'Unauthorized'
         });
-        return;
     }
 
     const token = authHeader.split(' ')[1];
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
-        res.status(500).json({
+        return res.status(500).json({
             message: 'JWT secret not configured'
         });
-        return;
     }
 
     if (!token) {
@@ -28,21 +26,13 @@ export default function authMiddleware(req: Request, res: Response, next: NextFu
     }
 
     try {
-        jwt.verify(token, secret, (err, decoded) => {
-            if (err) {
-                res.status(401).json({
-                    message: 'Unauthorized',
-                });
-                return;
-            }
-            req.user = decoded as AuthUser;
-            next();
-        });
+        const decoded = jwt.verify(token, secret);
+        req.user = decoded as AuthUser;
+        next();
     } catch (err) {
         console.log('Auth error: ', err);
-        res.status(500).json({
-            message: 'Internal server error'
+        return res.status(401).json({
+            message: 'Unauthorized'
         });
-        return;
     }
 }

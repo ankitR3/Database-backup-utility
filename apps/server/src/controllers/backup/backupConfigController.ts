@@ -9,11 +9,23 @@ export async function createBackupConfigController(req: Request, res: Response) 
         });
     }
 
-    const { type, schedule, mongoUri, mongoDbName, pgUri, pgDbName } = req.body;
+    const { type, mongoUri, mongoDbName, pgUri, pgDbName } = req.body;
 
-    if (!type || !schedule) {
+    if (!type) {
         return res.status(400).json({
-            message: 'Backup type and schedule are required'
+            message: 'Backup type is required',
+        });
+    }
+
+    if (type === 'mongo' && (!mongoUri || !mongoDbName)) {
+        return res.status(400).json({
+            message: 'Mongo config missing'
+        });
+    }
+
+    if (type === 'postgres' && (!pgUri || !pgDbName)) {
+        return res.status(400).json({
+            message: 'Postgres config missing',
         });
     }
 
@@ -21,7 +33,7 @@ export async function createBackupConfigController(req: Request, res: Response) 
         data: {
             userId: String(userId),
             type,
-            schedule,
+            schedule: null,
             mongoUri,
             mongoDbName,
             pgUri,
@@ -31,7 +43,7 @@ export async function createBackupConfigController(req: Request, res: Response) 
 
     res.status(201).json({
         success: true,
-        message: 'Scheduled backup configured',
+        message: 'Backup config saved',
         config,
     });
 }
