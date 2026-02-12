@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { BackupInput } from '../../types/backup.types';
-import { createBackup } from '../../services/backup/backupService';
+import { createBackup } from '../../services/backup/backup.service';
 
 export async function createBackupController(req: Request, res: Response) {
     try {

@@ -1,67 +1,74 @@
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import prisma from '@repo/db';
-import { createBackup } from '../../services/backup/backupService';
+import { createBackup } from '../../services/backup/backup.service';
+import { generateCron } from './cron.utils';
 
-type ScheduledTask = ReturnType<typeof cron.schedule>;
+const tasks = new Map<string, ScheduledTask>();
 
-const jobs = new Map<string, ScheduledTask>();
+export async function startBackupScheduler() {
+    console.log('Scheduler started...');
 
-export async function syncBackupScheduler() {
     const configs = await prisma.backupConfig.findMany({
-        where: { schedule: { not: null }},
+        where: {
+            enabled: true,
+        }
     });
 
-    const liveIds = new Set(configs.map((c) => c.id));
-
     for (const config of configs) {
-        if (jobs.has(config.id)) {
-            continue;
-        }
-
-        const task = cron.schedule(
-            config.schedule!,
-            async () => {
-                try {
-                    await createBackup({
-                        userId: config.userId,
-                        type: config.type,
-                        mongoUri: config.mongoUri ?? undefined,
-                        mongoDbName: config.mongoDbName ?? undefined,
-                        pgUri: config.pgUri ?? undefined,
-                        pgDbName: config.pgDbName ?? undefined,
-                    });
-                    console.log(`Backup success: config=${config.id}`);
-                } catch (err) {
-                    console.log(`Backup failed: config=${config.id}`), err;
-                }
-            },
-            {
-                timezone: 'Asia/Kolkata'
-            }
-        );
-
-        jobs.set(config.id, task);
-        console.log(`Scheduled: config=${config.id}`);
+        createTask(config);
     }
 
-    for(const [id, task] of jobs.entries()) {
-        if (!liveIds.has(id)) {
-            task.stop();
-            task.destroy();
-            jobs.delete(id);
-            console.log(`Removed: config=${id}`);
-        }
-    }
+    console.log(`Loaded ${configs.length} scheduled backups`);
 }
 
-export function startBackupScheduler() {
-    syncBackupScheduler().catch(console.error);
-    cron.schedule(
-        '*/1 * * * *',
-        () => syncBackupScheduler().catch(console.error),
+function createTask(config: any) {
+    const cronExpression = generateCron(
+        config.frequency,
+        config.time,
+        config.dayOfWeek
+    );
+
+    if (!cronExpression || !cron.validate(cronExpression)) return;
+
+    if (tasks.has(config.id)) {
+        tasks.get(config.id)?.stop();
+    }
+
+    const task = cron.schedule(
+        cronExpression,
+        async () => {
+            console.log(`Running backup for ${config.id}`);
+
+            try {
+                await createBackup({
+                    userId: config.userId,
+                    type: config.type,
+                    mongoUri: config.mongoUri ?? undefined,
+                    mongoDbName: config.mongoDbName ?? undefined,
+                    pgUri: config.pgUri ?? undefined,
+                    pgDbName: config.pgDbName ?? undefined,
+                });
+
+                console.log(`Backup success for ${config.id}`);
+            } catch (err) {
+                console.log(`Backup failed for ${config.id}`, err);
+            }
+        },
         {
-            timezone: 'Asia/Kolkata'
+            timezone: 'Asia/Kolkata',
         }
     );
-    console.log('Backup scheduler started (sync every 1 minute)');
+
+    tasks.set(config.id, task);
+}
+
+export function refreshTask(config: any) {
+    createTask(config);
+}
+
+export function removeTask(id: string) {
+    if (tasks.has(id)) {
+        tasks.get(id)?.stop();
+        tasks.delete(id);
+    }
 }
