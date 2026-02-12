@@ -19,7 +19,7 @@ model User {
   name        String
   email       String    @unique
   username    String?   @unique
-  password    String
+  password    String?
   image       String?
 
   createdAt   DateTime  @default(now())
@@ -58,6 +58,7 @@ model BackupConfig {
   pgDbName    String?
 
   schedule    String?
+  enabled     Boolean   @default(true)
   createdAt   DateTime  @default(now())
 }
 
