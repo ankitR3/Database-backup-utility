@@ -1,49 +1,56 @@
 import { Request, Response } from 'express';
 import prisma from '@repo/db';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
 
 export default async function signInController(req: Request, res: Response) {
+    const { user } = req.body;
+
+    if (!user?.email) {
+        return res.status(400).json({
+            message: 'User email required',
+        });
+    }
+
     try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({
-                message: 'email and password required'
-            });
-        }
-
-        const user = await prisma.user.findUnique({
+        let myUser = await prisma.user.findUnique({
             where: {
-                email
-            }
+                email: user.email
+            },
         });
 
-        if (!user || !user.password) {
-            return res.status(401).json({
-                message: 'Invalid credentials'
+        if (!myUser) {
+            myUser = await prisma.user.create({
+                data: {
+                    name: user.name,
+                    email: user.email,
+                    image: user.image,
+                },
             });
-        }
-
-        const isValid = await bcrypt.compare(password, user.password);
-        if (!isValid) {
-            return res.status(401).json({
-                message: 'Invalid credentials'
+        } else {
+            myUser = await prisma.user.update({
+                where: {
+                    email: user.email
+                },
+                data: {
+                    name: user.name,
+                    image: user.image,
+                },
             });
         }
 
         const secret = process.env.JWT_SECRET;
         if (!secret) {
             return res.status(500).json({
-                message: 'JWT_SECRET missing'
+                message: 'JWT_SECRET missing',
             });
         }
 
         const token = jwt.sign(
             {
-                id: user.id,
-                email: user.email
-            }, secret,
+                id: myUser.id,
+                email: myUser.email,
+            },
+            secret,
             {
                 expiresIn: '7d'
             }
@@ -51,20 +58,15 @@ export default async function signInController(req: Request, res: Response) {
 
         return res.json({
             success: true,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                image: user.image
-            },
+            user: myUser,
             token,
         });
 
     } catch (err) {
-        console.log('Signin Error: ', err);
+        console.log('SignIn Error : ', err);
         return res.status(500).json({
             success: false,
-            message: 'Authentication failed'
-        });
+            message: 'Authentication Failed'
+        })
     }
 }

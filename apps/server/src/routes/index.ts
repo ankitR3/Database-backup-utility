@@ -4,15 +4,13 @@ import { createBackupController } from '../controllers/backup/backupController';
 import { downloadBackupController } from '../controllers/backup/downloadController';
 import { healthController } from '../controllers/health/healthController';
 import { createBackupConfigController } from '../controllers/backup/backupConfigController';
-import signUpController from '../controllers/auth/signup.controller';
 import signInController from '../controllers/auth/signin.controller';
 
 const router: Router = Router();
 
 // <----------------------------------------CONTROLLERS---------------------------------------->
 // <-------------------------AUTH------------------------->
-router.post('/signup', signUpController);
-router.post('/signin', signInController);
+router.post('/login', signInController);
 
 // <----------------------------------BACKUP---------------------------------->
 router.post('/backup/create', authMiddleware, createBackupController);

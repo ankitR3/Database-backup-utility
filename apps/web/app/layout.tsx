@@ -4,6 +4,7 @@ import "./globals.css";
 import { authOptions } from "./api/auth/[...nextauth]/options";
 import { ThemeProvider } from "next-themes";
 import { getServerSession } from "next-auth";
+import Providers from "@/src/providers/provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,9 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark">
-          {children}
+          <Providers>
+            {children}
+          </Providers>
         </ThemeProvider>
       </body>
     </html>

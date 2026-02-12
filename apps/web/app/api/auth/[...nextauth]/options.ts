@@ -2,7 +2,7 @@ import { Account, AuthOptions, ISODateString} from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google';
 import { JWT } from 'next-auth/jwt';
 import axios from 'axios';
-import { SIGNIN_URL } from '@/routes/api-routes';
+import { LOGIN_URL } from '@/routes/api-routes';
 
 export interface UserType {
     id?: string | null;
@@ -31,11 +31,14 @@ export const authOptions: AuthOptions = {
         async signIn({ user, account }: { user: UserType; account: Account | null}) {
             try {
                 if (account?.provider === 'google') {
-                    console.log('sign-in url is: ', SIGNIN_URL);
+                    console.log('sign-in url is: ', LOGIN_URL);
 
-                    const response = await axios.post(`${SIGNIN_URL}`, {
-                        user,
-                        account
+                    const response = await axios.post(LOGIN_URL, {
+                        user: {
+                            email: user.email,
+                            name: user.name,
+                            image: user.image,
+                        },
                     }, {
                         timeout: 10000,
                     });
@@ -46,6 +49,8 @@ export const authOptions: AuthOptions = {
                         user.token = result.token;
                         return true;
                     }
+
+                    return false;
                 }
                 return false;
             } catch (err) {
