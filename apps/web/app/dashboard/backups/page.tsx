@@ -1,7 +1,9 @@
+import BackupButton from "@/src/components/backups/BackupButton";
+
 export default function() {
   return (
     <div>
-        Backups page
+        <BackupButton />
     </div>
   )
 }

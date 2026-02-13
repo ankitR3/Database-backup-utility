@@ -7,17 +7,20 @@ import { useSession } from 'next-auth/react';
 
 type Props = {
     type: 'mongo' | 'postgres'
+    onSaved?: () => void;
 }
 
-export default function BackupConfigForm({ type }: Props) {
+export default function BackupConfigForm({ type, onSaved }: Props) {
     const { data: session } = useSession();
+    const token = session?.user?.token as string;
+
     const [dbName, setDbName] = useState('');
     const [uri, setUri] = useState('');
     const [loading, setLoading] = useState(false);
 
     async function saveConfig() {
         try {
-            if (!session?.user?.token) {
+            if (!token) {
                 alert('You must be logged in');
                 return;
             }
@@ -34,15 +37,15 @@ export default function BackupConfigForm({ type }: Props) {
                 },
                 {
                     headers: {
-                        Authorization: `Bearer ${session.user.token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
 
-
-            alert('Backup config saved!')
-            setUri('')
-            setDbName('')
+            setUri('');
+            setDbName('');
+            
+            onSaved?.();
 
         } catch(err) {
             console.error('Database-Config-Form: ', err);

@@ -3,6 +3,8 @@
 import { ChartBarIcon, ArchiveBoxIcon, ClockIcon, Cog6ToothIcon, PresentationChartLineIcon, ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const content = [
     {
@@ -34,6 +36,7 @@ const content = [
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
 
     return (
         <aside className='w-55 h-screen'>
@@ -70,7 +73,13 @@ export default function Sidebar() {
 
                 {/* Button area */}
                 <div className='p-4 border-t border-gray-200 dark:border-gray-800'>
-                    <button className='flex items-center gap-3 py-2 w-full rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition'>
+                    <button
+                        onClick={async () => {
+                            await signOut({ redirect: false })
+                            router.push('/')
+                        }}
+                        className='flex items-center gap-3 py-2 w-full rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:cursor-pointer transition'
+                    >
                         <ArrowLeftStartOnRectangleIcon className='w-5 h-5' />
                         Sign Out
                     </button>
