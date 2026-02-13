@@ -16,8 +16,10 @@ router.post('/login', signInController);
 router.post('/backup/create', authMiddleware, createBackupController);
 router.get('/backup/download', authMiddleware, downloadBackupController);
 
+// <----------------------------------HEALTH---------------------------------->
 router.get('/health', healthController);
 
+// <----------------------------------SCHEDULE---------------------------------->
 router.post('/backup/schedule', authMiddleware, createBackupConfigController);
 router.get('/backup/configs', authMiddleware, getConfigs);
 router.patch('/backup/toggle', authMiddleware, toggleScheduler);
