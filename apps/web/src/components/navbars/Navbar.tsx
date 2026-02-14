@@ -31,15 +31,13 @@ export default function Navbar() {
     }
 
     return (
-        <header className='flex items-center justify-between px-8 py-4 bg-gray-300 dark:bg-[#12121E] text-gray-900 dark:text-gray-100'>
+        <header className='flex items-center w-screen bg-transparent fixed justify-end px-8 py-7'>
 
-            {/* Page Title */}
-            <h1 className='text-2xl font-semibold'>{title}</h1>
+            {/* <h1 className='text-2xl text-gray-300 font-bold'>{title}</h1> */}
 
-            {/* Right Area */}
             <div className='flex items-center gap-4'>
                 <ThemeToggle />
-                <div className="w-9 h-9 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                <div className="w-9 h-9 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
                     {content}
                 </div>
             </div>

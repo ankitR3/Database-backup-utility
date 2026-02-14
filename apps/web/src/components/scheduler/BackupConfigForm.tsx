@@ -56,7 +56,7 @@ export default function BackupConfigForm({ type, onSaved }: Props) {
     }
 
     return (
-        <div className='bg-[#1D1D29] rounded-2xl p-6 shadow-lg max-w-xl'>
+        <div className='bg-[#000000] rounded-xl p-6 shadow-lg max-w-xl'>
             <h2 className='text-xl font-semibold text-white mb-4'>
                 {type === "mongo" ? "MongoDB Backup Config" : "Postgres Backup Config"}
             </h2>
@@ -65,7 +65,7 @@ export default function BackupConfigForm({ type, onSaved }: Props) {
                     placeholder='Database URI'
                     value={uri}
                     onChange={(e) => setUri(e.target.value)}
-                    className='w-full bg-[#25253A] px-4 py-3 rounded-lg text-white outline-none'
+                    className='w-full bg-stone-900/70 px-4 py-3 rounded-lg text-white outline-none'
                 />
                 <br />
                 <br />
@@ -74,7 +74,7 @@ export default function BackupConfigForm({ type, onSaved }: Props) {
                     placeholder="Database Name"
                     value={dbName}
                     onChange={(e) => setDbName(e.target.value)}
-                    className="w-full bg-[#25253A] px-4 py-3 rounded-lg text-white outline-none"
+                    className="w-full bg-stone-900/70 px-4 py-3 rounded-lg text-white outline-none"
                 />
                 <br />
                 <br />

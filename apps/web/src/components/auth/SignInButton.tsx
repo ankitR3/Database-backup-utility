@@ -36,7 +36,7 @@ export default function SignInButton() {
     }
 
     return (
-        <button onClick={() => signIn('google', { callbackUrl: '/dashboard/scheduler'})}
+        <button onClick={() => signIn('google', { callbackUrl: '/dashboard'})}
             className='bg-primary hover:bg-gray-900 transition px-6 py-3 rounded-lg text-primary-foreground font-semibold flex items-center gap-2 hover:cursor-pointer'
         >
             <svg className='w-5 h-5' viewBox='0 0 24 24'>
