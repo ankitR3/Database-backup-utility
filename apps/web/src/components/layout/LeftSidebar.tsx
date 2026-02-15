@@ -37,8 +37,8 @@ export default function LeftSidebar() {
     ]
 
     return (
-        <aside className='w-64 h-screen bg-black text-gray-400 px-6 pt-6'>
-            <div className='text-xl font-bold text-gray-300 px-10 py-3'>
+        <aside className='w-64 h-screen bg-[#2B2B28] text-gray-400 px-6 pt-6'>
+            <div className='text-xl font-bold text-gray-200 px-10 py-3'>
                 DBHaven
             </div>
 

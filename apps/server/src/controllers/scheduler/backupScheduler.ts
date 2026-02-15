@@ -1,6 +1,6 @@
 import cron, { ScheduledTask } from 'node-cron';
 import prisma from '@repo/db';
-import { createBackup } from '../../services/backup/backup.service';
+import { createBackupFromConfig } from '../../services/backup/backup.service';
 import { generateCron } from './cron.utils';
 
 const tasks = new Map<string, ScheduledTask>();
@@ -40,14 +40,7 @@ function createTask(config: any) {
             console.log(`Running backup for ${config.id}`);
 
             try {
-                await createBackup({
-                    userId: config.userId,
-                    type: config.type,
-                    mongoUri: config.mongoUri ?? undefined,
-                    mongoDbName: config.mongoDbName ?? undefined,
-                    pgUri: config.pgUri ?? undefined,
-                    pgDbName: config.pgDbName ?? undefined,
-                });
+                await createBackupFromConfig(config);
 
                 console.log(`Backup success for ${config.id}`);
             } catch (err) {

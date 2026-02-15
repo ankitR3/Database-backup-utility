@@ -12,24 +12,15 @@ export async function createBackupController(req: Request, res: Response) {
             });
         }
 
-        const { type, mongoUri, mongoDbName, pgUri, pgDbName } = req.body;
+        const { configId } = req.body;
 
-        if (!['mongo', 'postgres'].includes(type)) {
+        if (!configId) {
             return res.status(400).json({
-                message: 'Invalid backup type'
+                message: 'Config ID required',
             });
         }
 
-        const input: BackupInput = {
-            userId: String(userId),
-            type,
-            mongoUri,
-            mongoDbName,
-            pgUri,
-            pgDbName
-        };
-
-        const result = await createBackup(input);
+        const result = await createBackup(configId, userId);
 
         res.status(201).json({
             success: true,
@@ -37,26 +28,14 @@ export async function createBackupController(req: Request, res: Response) {
             backup: result,
         });
     } catch (err: any) {
-        if (err.message === 'MONGO_CONFIG_MISSING') {
-            return res.status(400).json({
-                message: 'Mongo config missing'
-            });
-        }
-
-        if (err.message === 'POSTGRES_CONFIG_MISSING') {
-            return res.status(400).json({
-                message: 'Postgres config missing'
-            });
-        }
-
-        if (err.message === 'PG_DUMP_PATH_ERROR') {
-            return res.status(500).json({
-                message: 'pg_dump not configured on server'
+        if (err.message === 'CONFIG_NOT_FOUND') {
+            return res.status(404).json({
+                message: 'Backup config not found',
             });
         }
 
         res.status(500).json({
-            message: 'Backup failed'
+            message: 'Backup failed',
         });
     }
 }

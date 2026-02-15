@@ -5,7 +5,11 @@ import { useState } from 'react';
 import { BACKUP_CREATE_URL } from '@/routes/api-routes';
 import { useSession } from 'next-auth/react';
 
-export default function BackupButton() {
+type Props = {
+    configId: string
+}
+
+export default function BackupButton({ configId }: Props) {
     const { data: session } = useSession();
     const [loading, setLoading] = useState(false);
 
@@ -20,7 +24,7 @@ export default function BackupButton() {
 
             await axios.post(
                 BACKUP_CREATE_URL,
-                {},
+                { configId },
                 {
                     headers: {
                         Authorization: `Bearer ${session.user.token}`,
