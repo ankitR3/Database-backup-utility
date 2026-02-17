@@ -51,11 +51,15 @@ model BackupConfig {
   pgUri       String?
   pgDbName    String?
 
-  frequency String?
-  time String?
-  dayOfWeek Int?
+  frequency   String?
+  time        String?
+  dayOfWeek   Int?
 
   enabled     Boolean   @default(true)
+
+  isRunning   Boolean   @default(false)
+  lastRunAt   DateTime?
+  
   createdAt   DateTime  @default(now())
 }
 
