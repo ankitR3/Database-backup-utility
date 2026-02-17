@@ -22,6 +22,7 @@ export default function BackupButton({ configId }: Props) {
         try {
             setLoading(true)
 
+            // console.log("Sending configId:", configId);
             await axios.post(
                 BACKUP_CREATE_URL,
                 { configId },
@@ -45,7 +46,7 @@ export default function BackupButton({ configId }: Props) {
         <button
             onClick={runBackup}
             disabled={loading}
-            className='bg-[#1D1D29] text-gray-200 px-5 py-2 rounded-lg hover:cursor-pointer hover:bg-gray-700'
+            className='bg-[#1D1D29] text-gray-200 px-5 py-2 rounded-lg hover:bg-gray-700 hover:cursor-pointer'
         >
             {loading ? 'Running...' : 'Run Backup Now'}
         </button>

@@ -49,20 +49,34 @@ export async function createBackupConfigController(req: Request, res: Response) 
 }
 
 export async function getConfigs(req: Request, res: Response) {
-    const userId = req.user?.id;
-    if (!userId) {
-        return res.status(401).json({
-            message: 'Unauthorized'
+    try {
+
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({
+                message: 'Unauthorized'
+            });
+        }
+    
+        const configs = await prisma.backupConfig.findMany({
+            where: {
+                userId: String(userId),
+            },
+            select: {
+                id: true,
+                type: true,
+                enabled: true,
+                createdAt: true,
+            },
+        });
+    
+        res.status(200).json(configs);
+    } catch (err) {
+        console.error('get configs error: ', err);
+        res.status(500).json({
+            message: 'Failed to fetch configs'
         });
     }
-
-    const configs = await prisma.backupConfig.findMany({
-        where: {
-            userId: String(userId)
-        },
-    })
-
-    res.json(configs);
 }
 
 export async function toggleScheduler(req: Request, res: Response) {
