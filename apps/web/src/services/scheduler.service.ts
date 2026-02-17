@@ -13,10 +13,7 @@ export async function getBackupConfigs(token: string) {
 
 export async function toggleBackup(token: string, id: string, enabled: boolean) {
     const res = await axios.patch(
-        BACKUP_TOGGLE_URL, {
-            id,
-            enabled
-        }, {
+        `${BACKUP_TOGGLE_URL}/${id}/toggle`, { enabled }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

@@ -9,8 +9,8 @@ export const BACKUP_CREATE_URL = API_URL + '/backup/create';
 export const BACKUP_DOWNLOAD_URL = API_URL + '/backup/download';
 
 export const BACKUP_CONFIGS_URL = API_URL + '/backup/configs';
-export const BACKUP_TOGGLE_URL = API_URL + '/backup/toggle';
-export const BACKUP_UPDATE_SCHEDULER_URL = API_URL + '/backup/scheduler-update';
+export const BACKUP_TOGGLE_URL = API_URL + '/backup/config';
+export const BACKUP_UPDATE_SCHEDULER_URL = API_URL + '/backup/update-scheduler';
 export const BACKUP_DELETE_URL = API_URL + '/backup/config';
 
 export const HEALTH_URL = API_URL + '/health';

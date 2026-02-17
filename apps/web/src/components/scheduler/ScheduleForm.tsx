@@ -1,15 +1,18 @@
 'use client'
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { updateScheduler } from '@/src/services/scheduler.service';
 import { useSession } from 'next-auth/react';
 
 type Props = {
     configId: string
+    initialFrequency?: string
+    initialTime?: string
+    initialDayofWeek?: number
     onUpdated?: () => void
 }
 
-export default function SchedulerForm({ configId, onUpdated }: Props) {
+export default function SchedulerForm({ configId, initialFrequency, initialTime, initialDayofWeek, onUpdated }: Props) {
     const { data: session } = useSession();
     const token = session?.user?.token as string;
 
@@ -17,6 +20,12 @@ export default function SchedulerForm({ configId, onUpdated }: Props) {
     const [time, setTime] = useState('12:00')
     const [dayOfWeek, setDayOfWeek] = useState(1);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (initialFrequency) setFrequency(initialFrequency)
+        if (initialTime) setTime(initialTime)
+        if (initialDayofWeek !== undefined) setDayOfWeek(initialDayofWeek)
+    }, [initialFrequency, initialTime, initialDayofWeek]);
 
     async function handleSave() {
         if (!token) {

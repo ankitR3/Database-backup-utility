@@ -12,7 +12,11 @@ export async function createBackup(configId: string, userId: string) {
     })
 
     if (!config) {
-        throw new Error('CONFIG_NOT_FOUND')
+        throw new Error('CONFIG_NOT_FOUND');
+    }
+
+    if (!config.enabled) {
+        throw new Error('CONFIG_DISABLED');
     }
 
     return createBackupFromConfig(config)

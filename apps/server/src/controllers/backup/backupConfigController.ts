@@ -67,6 +67,13 @@ export async function getConfigs(req: Request, res: Response) {
                 type: true,
                 enabled: true,
                 createdAt: true,
+                isRunning: true,
+                lastRunAt: true,
+                frequency: true,
+                time: true,
+                dayOfWeek: true,
+                mongoDbName: true,
+                pgDbName: true,
             },
         });
     
@@ -88,7 +95,8 @@ export async function toggleScheduler(req: Request, res: Response) {
         });
     }
 
-    const { id, enabled } = req.body;
+    const id = req.params.id;
+    const { enabled } = req.body;
 
     if (!id) {
         return res.status(400).json({

@@ -40,11 +40,39 @@ function createTask(config: any) {
             console.log(`Running backup for ${config.id}`);
 
             try {
+                await prisma.backupConfig.update({
+                    where: {
+                        id: config.id
+                    },
+                    data: {
+                        isRunning: true
+                    }
+                });
+
                 await createBackupFromConfig(config);
+
+                await prisma.backupConfig.update({
+                    where: {
+                        id: config.id
+                    },
+                    data: {
+                        isRunning: false,
+                        lastRunAt: new Date(),
+                    },
+                });
 
                 console.log(`Backup success for ${config.id}`);
             } catch (err) {
                 console.log(`Backup failed for ${config.id}`, err);
+
+                await prisma.backupConfig.update({
+                    where: {
+                        id: config.id
+                    },
+                    data: {
+                        isRunning: false
+                    },
+                });
             }
         },
         {

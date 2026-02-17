@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { getBackupConfigs, toggleBackup, deleteBackup } from '@/src/services/scheduler.service'
+import { getBackupConfigs, deleteBackup } from '@/src/services/scheduler.service'
 import SchedulerSkeleton from './SchedulerSkeleton'
 import SchedulerForm from './ScheduleForm'
+import ScheduleToggle from './ScheduleToggle'
+import SchedulerRunButton from './ScheduleRunButton'
 
 type BackupConfig = {
   id: string
   type: 'mongo' | 'postgres'
   enabled: boolean
+  isRunning: boolean
+  lastRunAt?: string
   frequency?: string
   time?: string
   dayOfWeek?: number
@@ -24,35 +28,44 @@ export default function ScheduledBackupList() {
   const [configs, setConfigs] = useState<BackupConfig[]>([])
   const [loading, setLoading] = useState(true)
 
+  async function loadConfigs() {
+    if (!token) {
+      return;
+    }
+    const data = await getBackupConfigs(token)
+    setConfigs(data)
+  }
+
   useEffect(() => {
-    if (status !== 'authenticated') {
+    if (status !== 'authenticated' || !token) {
       setConfigs([])
       setLoading(false)
       return
     }
 
-    async function load() {
+    async function init() {
       try {
         setLoading(true)
-        const data = await getBackupConfigs(token)
-        setConfigs(data)
+        await loadConfigs()
       } finally {
         setLoading(false)
       }
     }
 
-    load()
+    init()
   }, [status, token])
 
-  async function handleToggle(id: string, enabled: boolean) {
-    if (!token) return
+  useEffect(() => {
+    if (status !== 'authenticated' || !token) {
+      return;
+    }
 
-    setConfigs(prev =>
-      prev.map(c => (c.id === id ? { ...c, enabled } : c))
-    )
+    const interval = setInterval(() => {
+      loadConfigs()
+    }, 5000)
 
-    await toggleBackup(token, id, enabled)
-  }
+    return () => clearInterval(interval)
+  }, [status, token])
 
   async function handleDelete(id: string) {
     if (!token) return
@@ -87,14 +100,27 @@ export default function ScheduledBackupList() {
             key={config.id}
             className="bg-[#1D1D29] p-5 rounded-xl space-y-4"
           >
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-semibold capitalize">
+            <div className="flex justify-between items-start">
+              <div className='space-y-2'>
+                
+                <p className="text-lg font-semibold capitalize">
                   {config.type} - {config.mongoDbName || config.pgDbName}
                 </p>
 
                 <p className="text-sm text-gray-400">
-                  {config.enabled ? 'Enabled' : 'Disabled'}
+                  {config.isRunning ? (
+                    <span className='text-yellow-400 animate-pulse'>
+                      Running...
+                    </span>
+                  ) : config.enabled ? (
+                    <span className='text-green-400'>
+                      Scheduled
+                    </span>
+                  ) : (
+                    <span className='text-red-400'>
+                      Disabled
+                    </span>
+                  )}
                 </p>
 
                 {config.frequency && (
@@ -103,28 +129,44 @@ export default function ScheduledBackupList() {
                     {config.time && ` at ${config.time}`}
                   </p>
                 )}
+
+                {config.lastRunAt && (
+                  <p className='text-xs text-gray-500'>
+                    Last run: {new Date(config.lastRunAt).toLocaleString()}
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-3">
-                <button
-                  onClick={() =>
-                    handleToggle(config.id, !config.enabled)
-                  }
-                  className="bg-blue-600 px-4 py-2 rounded"
-                >
-                  {config.enabled ? 'Disable' : 'Enable'}
-                </button>
+                <ScheduleToggle
+                  id={config.id}
+                  enabled={config.enabled}
+                  onToggle={async () => {
+                    await loadConfigs()
+                  }}
+                />
+
+                <SchedulerRunButton
+                  configId={config.id}
+                  enabled={config.enabled}
+                />
 
                 <button
                   onClick={() => handleDelete(config.id)}
-                  className="bg-red-600 px-4 py-2 rounded"
+                  className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 hover:cursor-pointer transition"
                 >
                   Delete
                 </button>
               </div>
             </div>
 
-            <SchedulerForm configId={config.id} />
+            <SchedulerForm
+              configId={config.id}
+              initialFrequency={config.frequency}
+              initialTime={config.time}
+              initialDayofWeek={config.dayOfWeek}
+              onUpdated={loadConfigs}
+            />
           </div>
         ))
       )}

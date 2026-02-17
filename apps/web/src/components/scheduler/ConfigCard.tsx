@@ -10,7 +10,7 @@ export default function ConfigCard({ title, description, active, onClick}: Props
         <div
             onClick={onClick}
             className={`cursor-pointer rounded-xl p-6 transition
-                ${active ? 'bg-[#333333]' : 'bg-[#2B2B28] hover:bg-stone-950'}    
+                ${active ? 'bg-[#2B2B28] hover:bg-stone-950' : 'bg-[#2B2B28] hover:bg-stone-950'}    
             `}
         >
             <h3 className='text-xl font-semibold'>{title}</h3>

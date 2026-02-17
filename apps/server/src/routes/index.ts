@@ -22,7 +22,7 @@ router.get('/health', healthController);
 // <----------------------------------SCHEDULE---------------------------------->
 router.post('/backup/schedule', authMiddleware, createBackupConfigController);
 router.get('/backup/configs', authMiddleware, getConfigs);
-router.patch('/backup/toggle', authMiddleware, toggleScheduler);
+router.patch('/backup/config/:id/toggle', authMiddleware, toggleScheduler);
 router.patch('/backup/update-scheduler', authMiddleware, updateScheduler);
 router.delete('/backup/config/:id', authMiddleware, deleteConfig);
 

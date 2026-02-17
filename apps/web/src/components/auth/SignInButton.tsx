@@ -1,9 +1,16 @@
 'use client'
 
 import { signIn, signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function SignInButton() {
     const { data: session, status } = useSession();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await signOut({ redirect: false });
+        router.replace('/');
+    }
 
     if (status === 'loading') {
         return (
@@ -26,8 +33,8 @@ export default function SignInButton() {
                     )}
                     <span className='text-foreground'>{session.user.email}</span>
                 </div>
-                <button onClick={() => signOut({ callbackUrl: '/'})}
-                        className='bg-destructive hover:bg-destructive/90 transition px-4 py-2 rounded-lg text-destructive-foreground'
+                <button onClick={handleLogout}
+                        className='bg-destructive hover:bg-destructive/90 transition px-4 py-2 rounded-lg text-destructive-foreground hover:bg-gray-900 hover:cursor-pointer'
                     >
                     Sign Out
                 </button>
