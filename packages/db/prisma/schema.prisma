@@ -61,6 +61,26 @@ model BackupConfig {
   lastRunAt   DateTime?
   
   createdAt   DateTime  @default(now())
+  BackupHistory BackupHistory[]
+}
+
+model BackupHistory {
+  id            String        @id @default(cuid())
+  configId      String
+  config        BackupConfig  @relation(fields: [configId], references: [id], onDelete: Cascade)
+  filePath      String
+  size          Int
+  durationMs    Int?
+  status        BackupStatus
+  errorMessage  String?
+  createdAt     DateTime      @default(now())
+
+  @@index([configId])
+}
+
+enum BackupStatus {
+  success
+  failed
 }
 
 enum AdminRole {
