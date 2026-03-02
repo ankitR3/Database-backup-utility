@@ -52,6 +52,6 @@ export async function postgresBackup(input: BackupInput) {
 
     return {
         type: "postgres",
-        encryptFilePath: encPath,
+        filePath: encPath,
     };
 }

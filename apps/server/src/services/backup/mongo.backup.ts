@@ -58,6 +58,6 @@ export async function mongoBackup(input: BackupInput) {
 
     return {
         type: "mongo",
-        encryptFilePath: encPath,
+        filePath: encPath,
     };
 }

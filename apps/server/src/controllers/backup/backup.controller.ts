@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { createBackup } from '../../services/backup/backup.service';
 import prisma from '@repo/db';
+import fs from 'fs';
 
 export async function createBackupController(req: Request, res: Response) {
     const userId = req.user?.id;
@@ -24,11 +25,25 @@ export async function createBackupController(req: Request, res: Response) {
         }
     });
 
+    if (!config || config.userId !== userId) {
+        return res.status(403).json({
+            message: 'Forbidden'
+        }); 
+    }
+
+    if (!config.enabled) {
+        return res.status(400).json({
+            message: 'Scheduler is disabled. Please enable it first'
+        });
+    }
+
     if (config?.isRunning) {
         return res.status(400).json({
             message: 'Backup already running'
         })
     }
+
+    const startTime = Date.now();
 
     try {
 
@@ -42,6 +57,21 @@ export async function createBackupController(req: Request, res: Response) {
         });
 
         const result = await createBackup(configId, userId);
+
+        const stats = fs.statSync(result.filePath);
+        const fileSize = stats.size;
+
+        const duration = Date.now() - startTime;
+
+        await prisma.backupHistory.create({
+            data: {
+                configId,
+                filePath: result.filePath,
+                size: fileSize,
+                durationMs: duration,
+                status: 'success',
+            },
+        });
 
         await prisma.backupConfig.update({
             where: {
@@ -60,6 +90,17 @@ export async function createBackupController(req: Request, res: Response) {
         });
 
     } catch (err: any) {
+        await prisma.backupHistory.create({
+            data: {
+                configId,
+                filePath: '',
+                size: 0,
+                durationMs: 0,
+                status: 'failed',
+                errorMessage: err.message || 'Unknown error'
+            },
+        });
+
         await prisma.backupConfig.update({
             where: {
                 id: configId
@@ -69,21 +110,9 @@ export async function createBackupController(req: Request, res: Response) {
             },
         });
 
-        if (err.message === 'CONFIG_NOT_FOUND') {
-            return res.status(404).json({
-                message: 'Backup config not found',
-            });
-        }
-
-        if (err.message === 'CONFIG_DISABLED') {
-            return res.status(400).json({
-                message: 'Scheduler is disabled. Please enable it first'
-            })
-        }
-
         console.error('Backup failed: ', err);
 
-        res.status(500).json({
+        return res.status(500).json({
             message: 'Backup failed',
         });
     }
