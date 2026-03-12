@@ -67,9 +67,9 @@ export default function ScheduledBackupList() {
     return () => clearInterval(interval)
   }, [status, token]);
 
-  useEffect(() => {
-    console.log("JWT:", session?.user?.token);
-  }, [session]);
+  // useEffect(() => {
+  //   console.log("JWT:", session?.user?.token);
+  // }, [session]);
 
   async function handleDelete(id: string) {
     if (!token) return

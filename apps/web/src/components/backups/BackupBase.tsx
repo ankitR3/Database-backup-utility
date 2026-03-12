@@ -15,24 +15,29 @@ export default function BackupBase() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (status !== 'authenticated' || !token) {
+        if (status !== 'authenticated') {
+            setLoading(false);
+            return;
+        }
+
+        if (!token) {
             return;
         }
 
         async function fetchConfigs() {
             try {
-
-                setLoading(true);
-
                 const res = await axios.get(BACKUP_CONFIGS_URL, {
                     headers: {
-                        Authorization: `Bearer ${session!.user.token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 });
 
                 setConfigs(res.data);
+
             } catch (err) {
                 console.log('web config fetch error: ', err);
+            } finally {
+                setLoading(false)
             }
         }
 
@@ -57,7 +62,7 @@ export default function BackupBase() {
                     
                     <div
                         key={config.id}
-                        className='bg-[#151521] p-5 rounded-xl space-y-4'
+                        className='bg-[#2B2B28] p-5 rounded-xl space-y-4'
                     >
                         <BackupButton configId={config.id} />
 

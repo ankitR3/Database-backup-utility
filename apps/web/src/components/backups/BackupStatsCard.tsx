@@ -56,7 +56,7 @@ export default function BackupStatsCard() {
     }
 
     return (
-        <div className='bg-[#1D1D29] p-5 rounded-xl mb-6 grid grid-cols-3 gap-4'>
+        <div className='bg-[#2B2B28] p-5 rounded-xl mb-6 grid grid-cols-3 gap-4'>
             <div>
                 <p className='text-gray-400 text-sm'>Total Backups</p>
                 <p className='text-xl font-bold'>{stats.totalBackups}</p>

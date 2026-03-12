@@ -65,34 +65,37 @@ export default function BackupHistory({ configId }: Props) {
                 <table className='w-full text-sm'>
                     <thead>
                         <tr className='text-gray-400 border-b border-gray-700'>
-                            <th className='text-left py-2'>Date</th>
-                            <th className='text-left'>Size</th>
-                            <th className='text-left'>Duration</th>
-                            <th className='text-left'>Status</th>
+                            <th className='text-left py-2 px-3'>Date</th>
+                            <th className='text-left px-5'>Size</th>
+                            <th className='text-left px-5'>Duration</th>
+                            <th className='text-left px-5'>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                    {data.map(item => (
-                    <tr key={item.id} className="border-b border-gray-800">
-                        <td className="py-2">
-                        {new Date(item.createdAt).toLocaleString()}
-                        </td>
-                        <td>
-                        {(item.size / 1024 / 1024).toFixed(2)} MB
-                        </td>
-                        <td>
-                        {(item.durationMs / 1000).toFixed(2)} sec
-                        </td>
-                        <td>
-                        {item.status === 'success' ? (
-                            <span className="text-green-400">Success</span>
-                        ) : (
-                            <span className="text-red-400">Failed</span>
-                        )}
-                        </td>
-                    </tr>
-                    ))}
-                </tbody>
+                        {data.map(item => (
+                        <tr key={item.id} className="border-b border-gray-800">
+                            <td className="py-2 px-2">
+                            {new Date(item.createdAt).toLocaleString()}
+                            </td>
+
+                            <td className='px-4'>
+                            {(item.size / 1024 / 1024).toFixed(2)} MB
+                            </td>
+
+                            <td className='px-4'>
+                            {(item.durationMs / 1000).toFixed(2)} sec
+                            </td>
+
+                            <td className='px-4'>
+                            {item.status === 'success' ? (
+                                <span className="text-green-400">Success</span>
+                            ) : (
+                                <span className="text-red-400">Failed</span>
+                            )}
+                            </td>
+                        </tr>
+                        ))}
+                    </tbody>
                 </table>
             )}
         </div>
