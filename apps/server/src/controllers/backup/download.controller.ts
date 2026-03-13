@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
-import path from 'node:path';
-import fs from 'node:fs/promises';
-import { decryptFile } from '../../utils/decrypt';
+import { decryptBuffer } from '../../utils/decryptBuffer';
+import prisma from '@repo/db';
 
 export async function downloadBackupController(req: Request, res: Response) {
     try {
         const userId = req.user?.id;
-        const { filePath, encrypted } = req.query;
+        const { backupId } = req.query;
 
         if (!userId) {
             return res.status(401).json({
@@ -15,34 +14,59 @@ export async function downloadBackupController(req: Request, res: Response) {
         }
         
 
-        if (!filePath || typeof filePath !== 'string') {
+        if (!backupId || typeof backupId !== 'string') {
             return res.status(400).json({
-                message: 'File path required'
+                message: 'Backup ID required'
             });
         }
 
-        const encryptedPath = path.resolve(filePath);
-
-        if (!encryptedPath.includes(path.join('backups', String(userId)))) {
-            return res.status(403).json({
-                message: 'Access denied'
-            });
-        }
-
-        await fs.access(encryptedPath);
-
-        if (encrypted == 'true') {
-            return res.download(encryptedPath);
-        }
-
-        const decryptedPath = encryptedPath.replace(/\.enc$/, "");
-
-        await decryptFile(encryptedPath, decryptedPath);
-
-        res.download(decryptedPath, async () => {
-            await fs.rm(decryptedPath, { force: true });
+        const backup = await prisma.backupHistory.findUnique({
+            where: {
+                id: backupId,
+            },
+            include: {
+                config: true,
+            },
         });
+
+        if (!backup) {
+            return res.status(404).json({
+                message: 'Backup not found',
+            });
+        }
+
+        if (backup.config.userId !== userId) {
+            return res.status(403).json({
+                message: 'Access denied',
+            });
+        }
+
+        if (!backup.fileData) {
+            return res.status(404).json({
+                message: 'Backup file missing',
+            });
+        }
+
+        let fileBuffer: Buffer = Buffer.from(backup.fileData);
+
+        if (backup.isEncrypted) {
+            fileBuffer = await decryptBuffer(fileBuffer);
+        }
+
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename=${backup.fileName || `backup-${backup.id}.enc`}`
+        );
+
+        res.setHeader(
+            "Content-Type",
+            "application/octet-stream"
+        );
+
+        res.send(fileBuffer);
+
     } catch (err) {
+        console.error('Download failed: ', err);
         res.status(500).json({
             message: 'Download failed'
         });

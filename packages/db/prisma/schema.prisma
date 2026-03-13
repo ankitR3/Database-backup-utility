@@ -61,21 +61,25 @@ model BackupConfig {
   lastRunAt   DateTime?
   
   createdAt   DateTime  @default(now())
-  BackupHistory BackupHistory[]
+  backupHistory BackupHistory[]
 }
 
 model BackupHistory {
   id            String        @id @default(cuid())
   configId      String
   config        BackupConfig  @relation(fields: [configId], references: [id], onDelete: Cascade)
-  filePath      String
+
+  fileName      String?
+  fileData      Bytes?
+  filePath      String?
   size          Int
   durationMs    Int?
   status        BackupStatus
   errorMessage  String?
   createdAt     DateTime      @default(now())
+  isEncrypted   Boolean       @default(true)
 
-  @@index([configId])
+  @@index([configId, createdAt])
 }
 
 enum BackupStatus {

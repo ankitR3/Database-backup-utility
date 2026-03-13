@@ -4,19 +4,14 @@ import crypto from 'node:crypto';
 const ALGORITHM = 'aes-256-cbc';
 const IV_LENGTH = 16;
 
-export async function decryptFile(
-    encryptedPath: string,
-    outputPath: string
-) {
+export async function decryptBuffer(buffer: Buffer): Promise<Buffer> {
     const secret = process.env.ENCRYPTION_SECRET;
     if (!secret) {
         throw new Error('ENCRYPTION_SECRET missing');
     }
 
-    const encryptedData = await fs.readFile(encryptedPath);
-
-    const iv = encryptedData.subarray(0, IV_LENGTH);
-    const content = encryptedData.subarray(IV_LENGTH);
+    const iv = buffer.subarray(0, IV_LENGTH);
+    const content = buffer.subarray(IV_LENGTH);
 
     const key = crypto.createHash('sha256').update(secret).digest();
 
@@ -27,5 +22,5 @@ export async function decryptFile(
         decipher.final(),
     ]);
 
-    await fs.writeFile(outputPath, decrypted);
+    return decrypted;
 }

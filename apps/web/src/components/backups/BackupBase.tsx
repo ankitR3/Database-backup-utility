@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import BackupButton from './BackupButton';
-import BackupHistory from './BackupTable';
+import BackupHistory from './BackupHistory';
 import BackupStatsCard from './BackupStatsCard';
 
 import { BackupConfig } from '@/src/types/backup.types';
@@ -58,17 +58,32 @@ export default function BackupBase() {
                     No backup configurations yet.
                 </p>
             ) : (
-                configs.map(config => (
-                    
-                    <div
-                        key={config.id}
-                        className='bg-[#2B2B28] p-5 rounded-xl space-y-4'
-                    >
-                        <BackupButton configId={config.id} />
+                configs.map(config => {
 
-                        <BackupHistory configId={config.id} />
-                    </div>
-                ))
+                    const dbName = config.mongoDbName || config.pgDbName;
+                    
+                    return (
+                        <div
+                            key={config.id}
+                            className='bg-[#2B2B28] p-5 rounded-xl space-y-4'
+                        >
+                            <div>
+
+                                <div>
+                                    <p className='text-lg font-semibold capitalize'>
+                                        {config.type} - {dbName}
+                                    </p>
+                                </div>
+                                <div className='mt-3'>
+                                    <BackupButton configId={config.id} />
+                                </div>
+                            </div>
+                            <div>
+                                <BackupHistory configId={config.id} />
+                            </div>
+                        </div>
+                    )
+                })
             )}
         </div>
     );

@@ -58,20 +58,22 @@ export async function createBackupController(req: Request, res: Response) {
 
         const result = await createBackup(configId, userId);
 
-        const stats = fs.statSync(result.filePath);
-        const fileSize = stats.size;
+        const fileBuffer = fs.readFileSync(result.filePath);
+        const fileSize = fileBuffer.length;
 
         const duration = Date.now() - startTime;
 
         await prisma.backupHistory.create({
             data: {
                 configId,
-                filePath: result.filePath,
+                fileData: fileBuffer,
                 size: fileSize,
                 durationMs: duration,
                 status: 'success',
             },
         });
+
+        fs.unlinkSync(result.filePath);
 
         await prisma.backupConfig.update({
             where: {
