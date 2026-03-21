@@ -14,12 +14,14 @@ type Stats = {
     }
 }
 
-export default function BackupStatsCard() {
+type Props = {
+    onLoaded: () => void
+}
+
+export default function BackupStatsCard({ onLoaded }: Props) {
     const { data: session} = useSession();
     const token = session?.user?.token as string
-
     const [stats, setStats] = useState<Stats | null>(null)
-    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         if (!token) {
@@ -28,7 +30,6 @@ export default function BackupStatsCard() {
 
         async function fetchStats() {
             try {
-                setLoading(true)
 
                 const res = await axios.get(BACKUP_STATUS_URL, {
                     headers: {
@@ -36,23 +37,19 @@ export default function BackupStatsCard() {
                     }
                 })
 
-                setStats(res.data)
+                setStats(res.data);
             } catch(err) {
                 console.error('Failed to fetch stats: ', err);
             } finally {
-                setLoading(false)
+                onLoaded();
             }
         }
 
-        fetchStats()
-    }, [token])
-
-    if (loading) {
-        return null
-    }
+        fetchStats();
+    }, [token]);
 
     if (!stats) {
-        return null
+        return null;
     }
 
     return (
@@ -76,5 +73,5 @@ export default function BackupStatsCard() {
                 </p>
             </div>
         </div>
-    )
+    );
 }

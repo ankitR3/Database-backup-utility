@@ -36,6 +36,13 @@ export async function getBackupHistoryController(req: Request, res: Response) {
         orderBy: {
             createdAt: 'desc'
         },
+        select:  {
+            id: true,
+            size: true,
+            durationMs: true,
+            status: true,
+            createdAt: true,
+        },
     });
 
     return res.status(200).json(history);

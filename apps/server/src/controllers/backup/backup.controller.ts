@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { createBackup } from '../../services/backup/backup.service';
 import prisma from '@repo/db';
-import fs from 'fs';
+import { runBackup } from '../../services/backup/runBackup';
 
 export async function createBackupController(req: Request, res: Response) {
     const userId = req.user?.id;
@@ -40,10 +39,8 @@ export async function createBackupController(req: Request, res: Response) {
     if (config?.isRunning) {
         return res.status(400).json({
             message: 'Backup already running'
-        })
+        });
     }
-
-    const startTime = Date.now();
 
     try {
 
@@ -56,66 +53,18 @@ export async function createBackupController(req: Request, res: Response) {
             },
         });
 
-        const result = await createBackup(configId, userId);
-
-        const fileBuffer = fs.readFileSync(result.filePath);
-        const fileSize = fileBuffer.length;
-
-        const duration = Date.now() - startTime;
-
-        await prisma.backupHistory.create({
-            data: {
-                configId,
-                fileData: fileBuffer,
-                size: fileSize,
-                durationMs: duration,
-                status: 'success',
-            },
-        });
-
-        fs.unlinkSync(result.filePath);
-
-        await prisma.backupConfig.update({
-            where: {
-                id: configId
-            },
-            data: {
-                isRunning: false,
-                lastRunAt: new Date(),
-            },
-        });
+        await runBackup(config);
 
         res.status(201).json({
             success: true,
             message: 'Backup created successfully',
-            backup: result,
         });
 
-    } catch (err: any) {
-        await prisma.backupHistory.create({
-            data: {
-                configId,
-                filePath: '',
-                size: 0,
-                durationMs: 0,
-                status: 'failed',
-                errorMessage: err.message || 'Unknown error'
-            },
-        });
-
-        await prisma.backupConfig.update({
-            where: {
-                id: configId
-            },
-            data: {
-                isRunning: false
-            },
-        });
-
+    } catch (err) {
         console.error('Backup failed: ', err);
 
-        return res.status(500).json({
-            message: 'Backup failed',
+        res.status(500).json({
+            message: 'Backup failed'
         });
     }
 }

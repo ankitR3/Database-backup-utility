@@ -1,7 +1,7 @@
 import cron, { ScheduledTask } from 'node-cron';
 import prisma from '@repo/db';
-import { createBackupFromConfig } from '../../services/backup/backup.service';
 import { generateCron } from './cron.utils';
+import { runBackup } from '../../services/backup/runBackup';
 
 const tasks = new Map<string, ScheduledTask>();
 
@@ -27,6 +27,7 @@ function createTask(config: any) {
         config.time,
         config.dayOfWeek
     );
+    console.log(`Cron created for ${config.id}: ${cronExpression}`);
 
     if (!cronExpression || !cron.validate(cronExpression)) return;
 
@@ -37,9 +38,27 @@ function createTask(config: any) {
     const task = cron.schedule(
         cronExpression,
         async () => {
-            console.log(`Running backup for ${config.id}`);
+
+            console.log(`Running backup for ${config.id} at ${new Date().toISOString()}`);
 
             try {
+
+                const latestConfig = await prisma.backupConfig.findUnique({
+                    where: {
+                        id: config.id
+                    }
+                });
+
+                if (!latestConfig || !latestConfig.enabled) {
+                    console.log(`Backup skipped for ${config.id}`);
+                    return;
+                }
+
+                if (latestConfig.isRunning) {
+                    console.log(`Backup already running for ${config.id}`);
+                    return;
+                }
+
                 await prisma.backupConfig.update({
                     where: {
                         id: config.id
@@ -49,17 +68,7 @@ function createTask(config: any) {
                     }
                 });
 
-                await createBackupFromConfig(config);
-
-                await prisma.backupConfig.update({
-                    where: {
-                        id: config.id
-                    },
-                    data: {
-                        isRunning: false,
-                        lastRunAt: new Date(),
-                    },
-                });
+                await runBackup(latestConfig);
 
                 console.log(`Backup success for ${config.id}`);
             } catch (err) {
@@ -71,7 +80,7 @@ function createTask(config: any) {
                     },
                     data: {
                         isRunning: false
-                    },
+                    }
                 });
             }
         },

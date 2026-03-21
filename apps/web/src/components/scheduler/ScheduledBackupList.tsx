@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { getBackupConfigs, deleteBackup } from '@/src/services/scheduler.service'
 import SchedulerSkeleton from './SchedulerSkeleton'
@@ -21,55 +21,91 @@ type BackupConfig = {
   pgDbName?: string
 }
 
+function getSchedulerText(config: BackupConfig) {
+  if (config.frequency === 'hourly') {
+    return 'Every hour';
+  }
+
+  if (config.frequency === 'daily' && config.time) {
+    return `Daily at ${config.time}`;
+  }
+
+  if (config.frequency === 'weekly' && config.time) {
+    const days = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday'
+    ];
+
+    return `Weekly on ${days[config.dayOfWeek ?? 0]} at ${config.time}`;
+  }
+
+  return config.frequency ?? 'Not scheduled';
+}
+
 export default function ScheduledBackupList() {
   const { data: session, status } = useSession()
   const token = session?.user?.token as string
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const [configs, setConfigs] = useState<BackupConfig[]>([])
   const [loading, setLoading] = useState(true)
 
-  async function loadConfigs() {
+  async function loadConfigs(showLoader = false) {
     if (!token) {
       return;
     }
-    const data = await getBackupConfigs(token)
-    setConfigs(data)
+
+    if (showLoader) {
+      setLoading(true);
+    }
+
+    try {
+      const data = await getBackupConfigs(token)
+      setConfigs(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(data)) {
+          return prev;
+        }
+        return data;
+      });
+    } finally {
+      if (showLoader) {
+        setLoading(false);
+      }
+    }
   }
 
   useEffect(() => {
-    if (status !== 'authenticated' || !token) {
-      setConfigs([])
-      setLoading(false)
+    if (!token) {
       return
     }
-
-    async function init() {
-      try {
-        setLoading(true)
-        await loadConfigs()
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    init()
-  }, [status, token])
+    loadConfigs(true)
+  }, [token])
 
   useEffect(() => {
-    if (status !== 'authenticated' || !token) {
+    if (!token) {
       return;
     }
 
-    const interval = setInterval(() => {
-      loadConfigs()
-    }, 5000)
+    if (intervalRef.current) {
+      return;
+    }
 
-    return () => clearInterval(interval)
-  }, [status, token]);
+    intervalRef.current = setInterval(() => {
+      loadConfigs(false)
+    }, 10000)
 
-  // useEffect(() => {
-  //   console.log("JWT:", session?.user?.token);
-  // }, [session]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [token]);
 
   async function handleDelete(id: string) {
     if (!token) return
@@ -129,8 +165,7 @@ export default function ScheduledBackupList() {
 
                 {config.frequency && (
                   <p className="text-sm text-gray-300">
-                    {config.frequency}
-                    {config.time && ` at ${config.time}`}
+                    {getSchedulerText(config)}
                   </p>
                 )}
 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BACKUP_CONFIGS_URL, BACKUP_TOGGLE_URL, BACKUP_DELETE_URL, BACKUP_UPDATE_SCHEDULER_URL } from '@/routes/api-routes';
+import { BACKUP_CONFIGS_URL, BACKUP_TOGGLE_URL, BACKUP_CONFIG_DELETE_URL, BACKUP_UPDATE_SCHEDULER_URL } from '@/routes/api-routes';
 
 export async function getBackupConfigs(token: string) {
     const res = await axios.get(BACKUP_CONFIGS_URL, {
@@ -24,7 +24,7 @@ export async function toggleBackup(token: string, id: string, enabled: boolean) 
 }
 
 export async function deleteBackup(token: string, id: string) {
-    const res = await axios.delete(`${BACKUP_DELETE_URL}/${id}`, {
+    const res = await axios.delete(`${BACKUP_CONFIG_DELETE_URL}/${id}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

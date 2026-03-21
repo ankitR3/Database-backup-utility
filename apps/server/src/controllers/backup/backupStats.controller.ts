@@ -28,6 +28,11 @@ export async function getBackupStatsController(req: Request, res: Response) {
                     in: configIds
                 },
             },
+            select: {
+                size: true,
+                createdAt: true,
+                status: true,
+            },
         });
 
         const totalBackups = histories.length;

@@ -1,26 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import BackupButton from './BackupButton';
 import BackupHistory from './BackupHistory';
 import BackupStatsCard from './BackupStatsCard';
-
 import { BackupConfig } from '@/src/types/backup.types';
 import axios from 'axios';
 import { BACKUP_CONFIGS_URL } from '@/routes/api-routes';
 import { useSession } from 'next-auth/react';
+import Spinner from '@repo/ui/Spinner';
 
 export default function BackupBase() {
     const{ data: session, status } = useSession();
     const token = session?.user?.token as string;
     const [configs, setConfigs] = useState<BackupConfig[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [configsLoaded, setConfigsLoaded] = useState(false);
+    const [statsLoaded, setStatsLoaded] = useState(false);
+
+    const allLoaded = configsLoaded && statsLoaded;
+
+    const handleStatsLoaded = useCallback(() => {
+        setStatsLoaded(true);
+    }, []);
 
     useEffect(() => {
-        if (status !== 'authenticated') {
-            setLoading(false);
+        if (status === 'loading') {
             return;
         }
 
-        if (!token) {
+        if (status !== 'authenticated' || !token) {
+            setConfigsLoaded(true);
             return;
         }
 
@@ -31,27 +38,35 @@ export default function BackupBase() {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-
                 setConfigs(res.data);
-
             } catch (err) {
                 console.log('web config fetch error: ', err);
             } finally {
-                setLoading(false)
+                setConfigsLoaded(true);
             }
         }
 
         fetchConfigs();
     }, [status, token]);
 
-    if (loading) {
-        return <p className='text-gray-400'>Loading backups...</p>
+    if (status === 'loading' || !allLoaded) {
+        return (
+            <>
+                {status === 'authenticated' && token && (
+                    <div className='hidden'>
+                        <BackupStatsCard onLoaded={handleStatsLoaded}/>
+                    </div>
+                )}
+                <div className='flex justify-center items-center py-20 w-full h-full'>
+                    <Spinner />
+                </div>
+            </>
+        )
     }
 
     return (
         <div className='space-y-6'>
-
-            <BackupStatsCard />
+            <BackupStatsCard onLoaded={handleStatsLoaded} />
 
             {configs.length === 0 ? (
                 <p className='text-gray-400'>
@@ -59,30 +74,23 @@ export default function BackupBase() {
                 </p>
             ) : (
                 configs.map(config => {
-
                     const dbName = config.mongoDbName || config.pgDbName;
-                    
                     return (
                         <div
                             key={config.id}
                             className='bg-[#2B2B28] p-5 rounded-xl space-y-4'
                         >
                             <div>
-
-                                <div>
-                                    <p className='text-lg font-semibold capitalize'>
-                                        {config.type} - {dbName}
-                                    </p>
-                                </div>
+                                <p className='text-lg font-semibold capitalize'>
+                                    {config.type} - {dbName}
+                                </p>
                                 <div className='mt-3'>
                                     <BackupButton configId={config.id} />
                                 </div>
                             </div>
-                            <div>
-                                <BackupHistory configId={config.id} />
-                            </div>
+                            <BackupHistory configId={config.id} />
                         </div>
-                    )
+                    );
                 })
             )}
         </div>
