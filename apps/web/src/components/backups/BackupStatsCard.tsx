@@ -53,22 +53,22 @@ export default function BackupStatsCard({ onLoaded }: Props) {
     }
 
     return (
-        <div className='bg-[#2B2B28] p-5 rounded-xl mb-6 grid grid-cols-3 gap-4'>
+        <div className='bg-gray-200 p-5 rounded-lg mb-6 grid grid-cols-3 gap-4 w-110 shadow-md shadow-gray-300'>
             <div>
-                <p className='text-gray-400 text-sm'>Total Backups</p>
-                <p className='text-xl font-bold'>{stats.totalBackups}</p>
+                <p className='text-black text-sm'>Total Backups</p>
+                <p className='text-xl font-bold text-black'>{stats.totalBackups}</p>
             </div>
 
             <div>
-                <p className='text-gray-400 text-sm'>Total Storage</p>
-                <p className='text-xl font-bold'>
+                <p className='text-black text-sm'>Total Storage</p>
+                <p className='text-xl font-bold text-black'>
                     {(stats.totalStorage / 1024 /1024).toFixed(2)} MB
                 </p>
             </div>
 
             <div>
-                <p className='text-gray-400 text-sm'> Last Backup</p>
-                <p className='text-xl font-bold'>
+                <p className='text-black text-sm'> Last Backup</p>
+                <p className='text-xl font-bold text-black'>
                     {stats.lastBackup ? new Date(stats.lastBackup.createdAt).toLocaleDateString() : 'N/A'}
                 </p>
             </div>

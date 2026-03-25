@@ -46,7 +46,7 @@ export default function BackupButton({ configId }: Props) {
         <button
             onClick={runBackup}
             disabled={loading}
-            className='bg-[#1D1D29] text-gray-200 px-5 py-2 rounded-lg hover:bg-gray-700 hover:cursor-pointer'
+            className='bg-white text-black px-5 py-2 rounded-lg hover:bg-red-600/50 hover:cursor-pointer shadow-sm font-semibold'
         >
             {loading ? 'Running...' : 'Run Backup Now'}
         </button>

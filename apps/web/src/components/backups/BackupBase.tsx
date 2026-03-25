@@ -65,11 +65,11 @@ export default function BackupBase() {
     }
 
     return (
-        <div className='space-y-6'>
+        <div className='space-y-6 w-130'>
             <BackupStatsCard onLoaded={handleStatsLoaded} />
 
             {configs.length === 0 ? (
-                <p className='text-gray-400'>
+                <p className='text-black'>
                     No backup configurations yet.
                 </p>
             ) : (
@@ -78,7 +78,7 @@ export default function BackupBase() {
                     return (
                         <div
                             key={config.id}
-                            className='bg-[#2B2B28] p-5 rounded-xl space-y-4'
+                            className='bg-gray-200 text-black p-5 rounded-xl space-y-4 shadow-md shadow-gray-300'
                         >
                             <div>
                                 <p className='text-lg font-semibold capitalize'>

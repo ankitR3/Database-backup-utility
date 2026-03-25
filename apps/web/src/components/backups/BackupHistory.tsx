@@ -133,7 +133,7 @@ export default function BackupHistory({ configId }: Props) {
     }, [configId, token]);
 
     return (
-        <div className='bg-[#1D1D29] p-4 rounded-xl mt-4'>
+        <div className='bg-white p-4 rounded-xl mt-4 shadow-sm'>
             <h3 className='text-lg font-semibold mb-3'>Backup History</h3>
 
             {loading ? (
@@ -156,7 +156,7 @@ export default function BackupHistory({ configId }: Props) {
 
                     <tbody>
                         {visibleBackups.map(item => (
-                            <tr key={item.id} className='border-b border-gray-800'>
+                            <tr key={item.id} className='border-b border-gray-800 font-medium'>
                                 <td className='py-2 px-2'>
                                     {new Date(item.createdAt).toLocaleString()}
                                 </td>
@@ -171,9 +171,9 @@ export default function BackupHistory({ configId }: Props) {
 
                                 <td className='px-4'>
                                     {item.status === 'success' ? (
-                                        <span className='text-green-400'>Success</span>
+                                        <span className='text-green-500 font-semibold'>Success</span>
                                     ) : (
-                                        <span className='text-red-400'>Failed</span>
+                                        <span className='text-red-500 font-semibold'>Failed</span>
                                     )}
                                 </td>
                             </tr>
