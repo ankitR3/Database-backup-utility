@@ -1,40 +1,29 @@
 'use client'
 
-import { useState } from 'react'
-import ConfigCard from './ConfigCard'
-import BackupConfigForm from './BackupConfigForm'
-import ScheduledBackupList from './ScheduledBackupList'
+import { useState } from 'react';
+import BackupConfigForm from './BackupConfigForm';
+import ScheduledBackupList from './ScheduledBackupList';
+import Modal from '../ui/Modal';
 
 export default function SchedulerView() {
-  const [selectedType, setSelectedType] =
-    useState<'mongo' | 'postgres' | null>(null)
-
-  function selectHandler(type: 'mongo' | 'postgres') {
-    setSelectedType(prev =>
-      prev === type ? null : type
-    )
-  }
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="space-y-10">
-      <div className="grid grid-cols md:grid-cols-2 gap-7 max-w-xl">
-        <ConfigCard
-          title="MongoDB backups"
-          description="Configure for Mongo Backup"
-          active={selectedType === 'mongo'}
-          onClick={() => selectHandler('mongo')}
-        />
+    <div className="space-y-5">
+      <button
+        onClick={() => setOpen(prev => !prev)}
+        className='relative z-10 bg-[#111111] text-white hover:bg-stone-800/90 font-bold transition px-4 py-2 rounded-md hover:cursor-pointer'
+      >
+        Add Backup Config
+      </button>
 
-        <ConfigCard
-          title="Postgres Backups"
-          description="Configure for Postgres Backup"
-          active={selectedType === 'postgres'}
-          onClick={() => selectHandler('postgres')}
-        />
-      </div>
-
-      {selectedType && (
-        <BackupConfigForm type={selectedType} />
+      {open && (
+        <Modal>
+          <BackupConfigForm
+            onSaved={() => setOpen(false)}
+            onClose={() => setOpen(false)}
+          />
+        </Modal>
       )}
 
       <ScheduledBackupList />

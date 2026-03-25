@@ -54,9 +54,9 @@ export default function SchedulerRunButton({ configId, enabled}: Props) {
         <button
             onClick={handleRun}
             disabled={loading}
-            className='bg-blue-600 px-4 py-2 rounded-md hover:bg-blue-700 hover:cursor-pointer transition'
+            className='bg-blue-600 px-4 rounded-md hover:bg-blue-700 hover:cursor-pointer transition'
         >
-            {loading ? 'Running...' : 'Run now'}
+            {loading ? 'Running...' : 'Run'}
         </button>
     )
 }

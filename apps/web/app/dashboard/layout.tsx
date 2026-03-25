@@ -7,7 +7,7 @@ export default function({
     children: React.ReactNode
 }) {
     return (
-        <div className='flex min-h-screen bg-gray-50 dark:bg-[#141414] transition-colors'>
+        <div className='flex min-h-screen dark:bg-white bg-black transition-colors'>
             <Navbar />
             <main>{children}</main>
         </div>

@@ -34,7 +34,7 @@ export default function ScheduleToggle({ id, enabled, onToggle}: Props) {
     return (
         <button
             onClick={handleClick}
-            className={`px-4 py-2 rounded-md hover:bg-green-700 hover:cursor-pointer transition ${
+            className={`px-3 text-md rounded-md hover:bg-green-700 hover:cursor-pointer transition ${
                 enabled ? 'bg-green-600 hover:bg-green-600' : 'bg-gray-600 hover:bg-gray-600'
             }`}
         >

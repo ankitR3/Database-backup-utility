@@ -1,22 +1,12 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
 import { DashboardEnum } from '@/src/constants/DashboardEnum';
 import { useDashboardStore } from '@/src/store/useDashboardStore';
 import { ChartBarIcon, ArchiveBoxIcon, ClockIcon, PresentationChartLineIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 
 export default function LeftSidebar() {
     const { activeTab, setActiveTab } = useDashboardStore();
-    const searchParams = useSearchParams();
-
-    useEffect(() => {
-        const tab = searchParams.get('tab');
-
-        if (tab && Object.values(DashboardEnum).includes(tab as DashboardEnum)) {
-            setActiveTab(tab as DashboardEnum);
-        }
-    }, [searchParams, setActiveTab]);
 
     function handleTabChange(tab: DashboardEnum) {
         const params = new URLSearchParams(window.location.search);

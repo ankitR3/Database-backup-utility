@@ -18,12 +18,15 @@ export function initWebSocket(server: any) {
                 switch (data.type) {
                     case MessageType.SUBSCRIBE: {
                         const { configId } = data;
-
                         if (!rooms.has(configId)) {
                             rooms.set(configId, new Set());
                         }
-
                         rooms.get(configId)?.add(socket);
+                        break;
+                    }
+                    case MessageType.UNSUBSCRIBE: {
+                        const { configId } = data;
+                        rooms.get(configId)?.delete(socket);
                         break;
                     }
                     default:

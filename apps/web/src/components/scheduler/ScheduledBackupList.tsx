@@ -7,6 +7,8 @@ import SchedulerSkeleton from './SchedulerSkeleton'
 import SchedulerForm from './ScheduleForm'
 import ScheduleToggle from './ScheduleToggle'
 import SchedulerRunButton from './ScheduleRunButton'
+import Modal from '../ui/Modal'
+import ConfirmModal from '../ui/ConfirmModal'
 
 type BackupConfig = {
   id: string
@@ -25,11 +27,11 @@ function getSchedulerText(config: BackupConfig) {
   if (config.frequency === 'hourly') {
     return 'Every hour';
   }
-
+  
   if (config.frequency === 'daily' && config.time) {
     return `Daily at ${config.time}`;
   }
-
+  
   if (config.frequency === 'weekly' && config.time) {
     const days = [
       'Sunday',
@@ -40,10 +42,10 @@ function getSchedulerText(config: BackupConfig) {
       'Friday',
       'Saturday'
     ];
-
+    
     return `Weekly on ${days[config.dayOfWeek ?? 0]} at ${config.time}`;
   }
-
+  
   return config.frequency ?? 'Not scheduled';
 }
 
@@ -51,9 +53,10 @@ export default function ScheduledBackupList() {
   const { data: session, status } = useSession()
   const token = session?.user?.token as string
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
-
+  
   const [configs, setConfigs] = useState<BackupConfig[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   async function loadConfigs(showLoader = false) {
     if (!token) {
@@ -125,8 +128,8 @@ export default function ScheduledBackupList() {
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">
+    <div className="space-y-2 w-105 mt-10">
+      <h2 className="text-2xl font-bold text-black p-2">
         Your Scheduled Backup
       </h2>
 
@@ -138,39 +141,39 @@ export default function ScheduledBackupList() {
         configs.map(config => (
           <div
             key={config.id}
-            className="bg-[#1D1D29] p-5 rounded-xl space-y-4"
+            className="bg-gray-100 outline-solid-10 shadow-[0_0_3px_rgba(0,0,0,0.25)] p-5 rounded-lg space-y-4"
           >
             <div className="flex justify-between items-start">
               <div className='space-y-2'>
                 
-                <p className="text-lg font-semibold capitalize">
-                  {config.type} - {config.mongoDbName || config.pgDbName}
+                <p className="text-lg text-black font-bold capitalize">
+                  -{config.type}- {config.mongoDbName || config.pgDbName}
                 </p>
 
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-400 font-semibold">
                   {config.isRunning ? (
-                    <span className='text-yellow-400 animate-pulse'>
+                    <span className='text-yellow-600 animate-pulse'>
                       Running...
                     </span>
                   ) : config.enabled ? (
-                    <span className='text-green-400'>
+                    <span className='text-green-600'>
                       Scheduled
                     </span>
                   ) : (
-                    <span className='text-red-400'>
+                    <span className='text-red-600'>
                       Disabled
                     </span>
                   )}
                 </p>
 
                 {config.frequency && (
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-black font-semibold">
                     {getSchedulerText(config)}
                   </p>
                 )}
 
                 {config.lastRunAt && (
-                  <p className='text-xs text-gray-500'>
+                  <p className='text-xs text-gray-500 font-bold'>
                     Last run: {new Date(config.lastRunAt).toLocaleString()}
                   </p>
                 )}
@@ -191,11 +194,23 @@ export default function ScheduledBackupList() {
                 />
 
                 <button
-                  onClick={() => handleDelete(config.id)}
-                  className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 hover:cursor-pointer transition"
+                  onClick={() => setDeleteId(config.id)}
+                  className="bg-red-600 px-4 py-2 rounded-md hover:bg-red-700 hover:cursor-pointer transition"
                 >
                   Delete
                 </button>
+
+                {deleteId && (
+                  <Modal>
+                    <ConfirmModal
+                      title='Delete backups?'
+                      description='This action cannot be undone.'
+                      confirmLabel='Delete'
+                      onConfirm={() => { handleDelete(deleteId); setDeleteId(null); }}
+                      onCancel={() => setDeleteId(null)}
+                    />
+                  </Modal>
+                )}
               </div>
             </div>
 

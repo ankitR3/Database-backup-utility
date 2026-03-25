@@ -3,9 +3,9 @@ import RightMainContent from '@/src/components/layout/RightMainContent';
 
 export default function DashboardPage() {
     return (
-        <div className='flex h-screen'>
+        <div className='flex h-screen w-screen'>
            <LeftSidebar />
-           <div className='flex-1 px-10 pt-15'>
+           <div className='flex-1 px-10 pt-15 overflow-y-auto w-full'>
             <RightMainContent /> 
            </div>
         </div>

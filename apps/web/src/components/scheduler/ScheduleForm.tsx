@@ -58,11 +58,11 @@ export default function SchedulerForm({ configId, initialFrequency, initialTime,
     }
 
     return (
-        <div className='bg-[#1D1D29] p-4 rounded-xl space-y-4 mt-4'>
+        <div className='bg-white shadow-sm p-4 rounded-xl space-y-1 space-x-3 mt-4'>
             <select
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}
-                className='bg-[#25253A] p-2 rounded'
+                className='bg-gray-200 text-black p-1.5 text-md rounded hover:cursor-pointer'
             >
                 <option value="hourly">Hourly</option>
                 <option value="daily">Daily</option>
@@ -74,15 +74,15 @@ export default function SchedulerForm({ configId, initialFrequency, initialTime,
                     type='time'
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    className='bg-[#25253A] p-2 rounded'
+                    className='bg-gray-200 text-black p-1 rounded hover:cursor-pointer'
                 />
             )}
 
             {frequency === 'weekly' && (
                 <select
-                    value={dayOfWeek}
+                    value={dayOfWeek ?? 1}
                     onChange={(e) => setDayOfWeek(Number(e.target.value))}
-                    className='bg-[#25253A] p-2 rounded'
+                    className='bg-gray-200 text-black p-1.5 rounded hover:cursor-pointer'
                 >
                     <option value={0}>Sunday</option>
                     <option value={1}>Monday</option>
@@ -97,7 +97,7 @@ export default function SchedulerForm({ configId, initialFrequency, initialTime,
             <button
                 onClick={handleSave}
                 disabled={loading}
-                className='bg-green-600 px-4 py-2 rounded'
+                className='bg-green-600 text-white mt-2 px-3 py-1 rounded hover:bg-green-600/80 hover:cursor-pointer'
             >
                 {loading ? 'Saving...' : 'Save Schedule'}
             </button>
