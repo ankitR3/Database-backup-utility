@@ -58,7 +58,7 @@ export default function SchedulerForm({ configId, initialFrequency, initialTime,
     }
 
     return (
-        <div className='bg-white shadow-sm p-4 rounded-xl space-y-1 space-x-3 mt-4'>
+        <div className='bg-[#f3f4f6] shadow-sm shadow-gray-300 p-4 rounded-md space-y-1 space-x-3 mt-4'>
             <select
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}

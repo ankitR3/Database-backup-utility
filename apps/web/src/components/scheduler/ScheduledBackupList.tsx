@@ -9,6 +9,8 @@ import ScheduleToggle from './ScheduleToggle'
 import SchedulerRunButton from './ScheduleRunButton'
 import Modal from '../ui/Modal'
 import ConfirmModal from '../ui/ConfirmModal'
+import { IconDatabase } from '@tabler/icons-react';
+import { Button } from '../ui/button';
 
 type BackupConfig = {
   id: string
@@ -21,6 +23,10 @@ type BackupConfig = {
   dayOfWeek?: number
   mongoDbName?: string
   pgDbName?: string
+}
+
+type Props = {
+  onAddClick: () => void
 }
 
 function getSchedulerText(config: BackupConfig) {
@@ -49,7 +55,7 @@ function getSchedulerText(config: BackupConfig) {
   return config.frequency ?? 'Not scheduled';
 }
 
-export default function ScheduledBackupList() {
+export default function ScheduledBackupList({ onAddClick }: Props) {
   const { data: session, status } = useSession()
   const token = session?.user?.token as string
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -83,20 +89,13 @@ export default function ScheduledBackupList() {
   }
 
   useEffect(() => {
-    if (!token) {
-      return
-    }
+    if (!token) return;
     loadConfigs(true)
   }, [token])
 
   useEffect(() => {
-    if (!token) {
-      return;
-    }
-
-    if (intervalRef.current) {
-      return;
-    }
+    if (!token) return;
+    if (intervalRef.current) return;
 
     intervalRef.current = setInterval(() => {
       loadConfigs(false)
@@ -111,13 +110,13 @@ export default function ScheduledBackupList() {
   }, [token]);
 
   async function handleDelete(id: string) {
-    if (!token) return
+    if (!token) return;
 
     setConfigs(prev => prev.filter(c => c.id !== id))
     await deleteBackup(token, id)
   }
 
-  if (status === 'loading') return null
+  if (status === 'loading') return null;
 
   if (status !== 'authenticated') {
     return (
@@ -136,20 +135,31 @@ export default function ScheduledBackupList() {
       {loading ? (
         <SchedulerSkeleton />
       ) : configs.length === 0 ? (
-        <p className="text-gray-400">No configs yet.</p>
+        <div>
+          <div className='text-black p-4 rounded-full'>
+            <IconDatabase size={32} className='text=gray-300' />
+          </div>
+          <p className='text-gray-900 font-semibold text-lg'>No Backups Yet</p>
+          <p className='text-black'>
+            You haven't created any backup yet. Get started by creating your first backup.
+          </p>
+          <Button
+            onClick={onAddClick}
+          >
+            Create Backup
+          </Button>
+        </div>
       ) : (
         configs.map(config => (
           <div
             key={config.id}
-            className="bg-gray-100 outline-solid-10 shadow-[0_0_3px_rgba(0,0,0,0.25)] p-5 rounded-lg space-y-4"
+            className="bg-[#ffffff] outline-solid-10 shadow-[0_0_3px_rgba(0,0,0,0.25)] p-5 rounded-lg space-y-4"
           >
             <div className="flex justify-between items-start">
               <div className='space-y-2'>
-                
                 <p className="text-lg text-black font-bold capitalize">
                   -{config.type}- {config.mongoDbName || config.pgDbName}
                 </p>
-
                 <p className="text-sm text-gray-400 font-semibold">
                   {config.isRunning ? (
                     <span className='text-yellow-600 animate-pulse'>
@@ -183,9 +193,7 @@ export default function ScheduledBackupList() {
                 <ScheduleToggle
                   id={config.id}
                   enabled={config.enabled}
-                  onToggle={async () => {
-                    await loadConfigs()
-                  }}
+                  onToggle={async () => await loadConfigs()}
                 />
 
                 <SchedulerRunButton
@@ -193,24 +201,12 @@ export default function ScheduledBackupList() {
                   enabled={config.enabled}
                 />
 
-                <button
+                <Button
+                  variant='destructive'
                   onClick={() => setDeleteId(config.id)}
-                  className="bg-red-600 px-4 py-2 rounded-md hover:bg-red-700 hover:cursor-pointer transition"
                 >
                   Delete
-                </button>
-
-                {deleteId && (
-                  <Modal>
-                    <ConfirmModal
-                      title='Delete backups?'
-                      description='This action cannot be undone.'
-                      confirmLabel='Delete'
-                      onConfirm={() => { handleDelete(deleteId); setDeleteId(null); }}
-                      onCancel={() => setDeleteId(null)}
-                    />
-                  </Modal>
-                )}
+                </Button>
               </div>
             </div>
 
@@ -223,6 +219,18 @@ export default function ScheduledBackupList() {
             />
           </div>
         ))
+      )}
+
+      {deleteId && (
+        <Modal>
+          <ConfirmModal
+            title='Delete backups?'
+            description='This action cannot be undone.'
+            confirmLabel='Delete'
+            onConfirm={() => { handleDelete(deleteId); setDeleteId(null); }}
+            onCancel={() => setDeleteId(null)}
+          />
+        </Modal>
       )}
     </div>
   )

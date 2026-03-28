@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { BACKUP_HISTORY_URL } from '@/routes/api-routes';
 import axios from 'axios';
-import Spinner from '@repo/ui/Spinner';
+import Spinner from '../ui/Spinner';
 
 type History = {
     id: string

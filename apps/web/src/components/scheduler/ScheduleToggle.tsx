@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { toggleBackup } from '@/src/services/scheduler.service';
+import { Switch } from '../ui/switch';
 
 type Props = {
     id: string
@@ -13,32 +14,24 @@ export default function ScheduleToggle({ id, enabled, onToggle}: Props) {
     const { data: session } = useSession();
     const token = session?.user?.token as string
 
-    async function handleClick() {
-        if (!token) {
-            return;
-        }
+    async function handleClick(newValue: boolean) {
+        if (!token) return;
 
-        const newValue = !enabled
-
-        onToggle(newValue)
+        onToggle(newValue);
 
         try {
             await toggleBackup(token, id, newValue)
         } catch (err) {
             console.error('Schedule toggle Error: ', err);
-            onToggle(enabled)
+            onToggle(!newValue)
             alert('Failed to update scheduler')
         }
     }
 
     return (
-        <button
-            onClick={handleClick}
-            className={`px-3 text-md rounded-md hover:bg-green-700 hover:cursor-pointer transition ${
-                enabled ? 'bg-green-600 hover:bg-green-600' : 'bg-gray-600 hover:bg-gray-600'
-            }`}
-        >
-            {enabled ? 'Disable' : 'Enable'}
-        </button>
+        <Switch
+            checked={enabled}
+            onCheckedChange={handleClick}
+        />
     )
 }

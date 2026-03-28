@@ -6,7 +6,7 @@ import { BackupConfig } from '@/src/types/backup.types';
 import axios from 'axios';
 import { BACKUP_CONFIGS_URL } from '@/routes/api-routes';
 import { useSession } from 'next-auth/react';
-import Spinner from '@repo/ui/Spinner';
+import Spinner from '../ui/Spinner';
 
 export default function BackupBase() {
     const{ data: session, status } = useSession();

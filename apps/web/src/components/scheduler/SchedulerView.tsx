@@ -10,23 +10,15 @@ export default function SchedulerView() {
 
   return (
     <div className="space-y-5">
-      <button
-        onClick={() => setOpen(prev => !prev)}
-        className='relative z-10 bg-[#111111] text-white hover:bg-stone-800/90 font-bold transition px-4 py-2 rounded-md hover:cursor-pointer'
-      >
-        Add Backup Config
-      </button>
-
       {open && (
         <Modal>
-          <BackupConfigForm
-            onSaved={() => setOpen(false)}
-            onClose={() => setOpen(false)}
-          />
+            <BackupConfigForm
+                onSaved={() => setOpen(false)}
+                onClose={() => setOpen(false)}
+            />
         </Modal>
       )}
-
-      <ScheduledBackupList />
+      <ScheduledBackupList onAddClick={() => setOpen(true)} />
     </div>
   )
 }
