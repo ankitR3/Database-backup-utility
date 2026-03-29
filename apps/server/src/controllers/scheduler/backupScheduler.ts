@@ -33,6 +33,7 @@ function createTask(config: any) {
 
     if (tasks.has(config.id)) {
         tasks.get(config.id)?.stop();
+        tasks.delete(config.id);
     }
 
     const task = cron.schedule(

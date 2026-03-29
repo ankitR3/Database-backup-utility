@@ -58,7 +58,7 @@ export default function SchedulerForm({ configId, initialFrequency, initialTime,
     }
 
     return (
-        <div className='bg-[#f3f4f6] shadow-sm shadow-gray-300 p-4 rounded-md space-y-1 space-x-3 mt-4'>
+        <div className='p-4 rounded-md space-y-1 space-x-3 mt-4'>
             <select
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}
@@ -99,7 +99,7 @@ export default function SchedulerForm({ configId, initialFrequency, initialTime,
                 disabled={loading}
                 className='bg-green-600 text-white mt-2 px-3 py-1 rounded hover:bg-green-600/80 hover:cursor-pointer'
             >
-                {loading ? 'Saving...' : 'Save Schedule'}
+                {loading ? 'Saving...' : 'Save'}
             </button>
         </div>
     )

@@ -6,6 +6,7 @@ import { authOptions } from "./api/auth/[...nextauth]/options";
 import { ThemeProvider } from "next-themes";
 import { getServerSession } from "next-auth";
 import Providers from "@/src/providers/provider";
+import { Toaster } from "@/src/components/ui/sonner";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -32,7 +33,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions);
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${poppins.className} antialiased`}>
@@ -41,6 +42,7 @@ export default async function RootLayout({
             {children}
           </Providers>
         </ThemeProvider>
+        <Toaster position="top-center" />
       </body>
     </html>
   );

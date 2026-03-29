@@ -67,7 +67,7 @@ export default function BackupConfigForm({ onSaved, onClose }: Props) {
     }
 
     return (
-        <div className='bg-gray-200 rounded-lg p-6 shadow-md w-[520px]'>
+        <div className='w-full'>
             <div className='flex justify-between items-center mb-6'>
                 <h2 className='text-xl font-bold text-gray-800'>Backup Config</h2>
                 <button
@@ -84,8 +84,8 @@ export default function BackupConfigForm({ onSaved, onClose }: Props) {
                         placeholder='Database URI'
                         value={uri}
                         onChange={(e) => setUri(e.target.value)}
-                        className={`w-full bg-white px-4 py-3 rounded-lg text-black outline-none transition
-                            ${uriValid === null ? 'bg-white' : uriValid ? 'bg-white ring-1 ring-green-600' : 'bg-white ring-1 ring-red-600'}
+                        className={`w-full border px-4 py-3 rounded-lg text-black outline-none transition
+                            ${uriValid === null ? 'border-gray-200' : uriValid ? 'border-green-500' : 'border-red-500'}
                         `}
                     />
                     {uri && (
@@ -100,8 +100,8 @@ export default function BackupConfigForm({ onSaved, onClose }: Props) {
                         placeholder="Database Name"
                         value={dbName}
                         onChange={(e) => setDbName(e.target.value)}
-                        className={`w-full bg-white px-4 py-3 rounded-lg text-black outline-none transition
-                            ${dbNameValid === null ? 'bg-white' : dbNameValid ? 'bg-white ring-1 ring-green-600' : 'bg-white ring-1 ring-red-600'}
+                        className={`w-full border px-4 py-3 rounded-lg text-black outline-none transition
+                            ${dbNameValid === null ? 'border-gray-200' : dbNameValid ? 'border-green-500' : 'border-red-500'}
                         `}
                     />
                     {dbName && !dbNameValid && (

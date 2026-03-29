@@ -1,16 +1,18 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { useSession } from 'next-auth/react'
-import { getBackupConfigs, deleteBackup } from '@/src/services/scheduler.service'
-import SchedulerSkeleton from './SchedulerSkeleton'
-import SchedulerForm from './ScheduleForm'
-import ScheduleToggle from './ScheduleToggle'
-import SchedulerRunButton from './ScheduleRunButton'
-import Modal from '../ui/Modal'
-import ConfirmModal from '../ui/ConfirmModal'
+import { useEffect, useState, useRef } from 'react';
+import { useSession } from 'next-auth/react';
+import { getBackupConfigs, deleteBackup } from '@/src/services/scheduler.service';
+import SchedulerSkeleton from './SchedulerSkeleton';
+import SchedulerForm from './ScheduleForm';
+import ScheduleToggle from './ScheduleToggle';
+import SchedulerRunButton from './ScheduleRunButton';
 import { IconDatabase } from '@tabler/icons-react';
 import { Button } from '../ui/button';
+import BackupConfigMenu from './BackupConfigMenu';
+import ConfirmDialog from '../ui/ConfirmDialog';
+import { DashboardEnum } from '@/src/constants/DashboardEnum';
+import { useDashboardStore } from '@/src/store/useDashboardStore';
 
 type BackupConfig = {
   id: string
@@ -27,6 +29,7 @@ type BackupConfig = {
 
 type Props = {
   onAddClick: () => void
+  refreshKey?: number
 }
 
 function getSchedulerText(config: BackupConfig) {
@@ -55,7 +58,7 @@ function getSchedulerText(config: BackupConfig) {
   return config.frequency ?? 'Not scheduled';
 }
 
-export default function ScheduledBackupList({ onAddClick }: Props) {
+export default function ScheduledBackupList({ onAddClick, refreshKey }: Props) {
   const { data: session, status } = useSession()
   const token = session?.user?.token as string
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -63,6 +66,7 @@ export default function ScheduledBackupList({ onAddClick }: Props) {
   const [configs, setConfigs] = useState<BackupConfig[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { setActiveTab } = useDashboardStore();
 
   async function loadConfigs(showLoader = false) {
     if (!token) {
@@ -91,7 +95,7 @@ export default function ScheduledBackupList({ onAddClick }: Props) {
   useEffect(() => {
     if (!token) return;
     loadConfigs(true)
-  }, [token])
+  }, [token, refreshKey])
 
   useEffect(() => {
     if (!token) return;
@@ -160,53 +164,48 @@ export default function ScheduledBackupList({ onAddClick }: Props) {
                 <p className="text-lg text-black font-bold capitalize">
                   -{config.type}- {config.mongoDbName || config.pgDbName}
                 </p>
-                <p className="text-sm text-gray-400 font-semibold">
-                  {config.isRunning ? (
-                    <span className='text-yellow-600 animate-pulse'>
-                      Running...
-                    </span>
-                  ) : config.enabled ? (
-                    <span className='text-green-600'>
-                      Scheduled
-                    </span>
-                  ) : (
-                    <span className='text-red-600'>
-                      Disabled
-                    </span>
-                  )}
-                </p>
 
                 {config.frequency && (
-                  <p className="text-sm text-black font-semibold">
+                  <p className="text-sm text-red-600 font-semibold ml-2.5">
                     {getSchedulerText(config)}
                   </p>
                 )}
 
-                {config.lastRunAt && (
-                  <p className='text-xs text-gray-500 font-bold'>
-                    Last run: {new Date(config.lastRunAt).toLocaleString()}
-                  </p>
-                )}
+                <Button
+                  variant='ghost'
+                  // size='sm'
+                  onClick={() => setActiveTab(DashboardEnum.BACKUPS)}
+                >
+                  Backups ↗
+                </Button>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <ScheduleToggle
                   id={config.id}
                   enabled={config.enabled}
-                  onToggle={async () => await loadConfigs()}
+                  onToggle={(newValue) => setConfigs(prev => prev.map(c =>
+                    c.id === config.id ? { ...c, enabled: newValue } : c
+                  ))}
                 />
 
                 <SchedulerRunButton
                   configId={config.id}
                   enabled={config.enabled}
+                  onRunStart={() => setConfigs(prev => prev.map(c =>
+                    c.id === config.id ? { ...c, isRunning: true } : c
+                  ))}
+                  onRunEnd={() => setConfigs(prev => prev.map(c =>
+                    c.id === config.id ? { ...c, isRunning: false } : c
+                  ))}
                 />
 
-                <Button
-                  variant='destructive'
-                  onClick={() => setDeleteId(config.id)}
-                >
-                  Delete
-                </Button>
+                <BackupConfigMenu
+                  onDelete={() => setDeleteId(config.id)}
+                  onEdit={() => console.log('edit', config.id)}
+                  onSettings={() => console.log('settings', config.id)}
+                  onNewBackup={onAddClick}
+                />
               </div>
             </div>
 
@@ -221,17 +220,14 @@ export default function ScheduledBackupList({ onAddClick }: Props) {
         ))
       )}
 
-      {deleteId && (
-        <Modal>
-          <ConfirmModal
-            title='Delete backups?'
-            description='This action cannot be undone.'
-            confirmLabel='Delete'
-            onConfirm={() => { handleDelete(deleteId); setDeleteId(null); }}
-            onCancel={() => setDeleteId(null)}
-          />
-        </Modal>
-      )}
+      <ConfirmDialog
+        open={!!deleteId}
+        title='Delete backup?'
+        description='This will permanently delete this backup configuration and all its history. This action cannot be undone.'
+        confirmLabel='delete'
+        onConfirm={() => { handleDelete(deleteId!); setDeleteId(null); }}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   )
 }
