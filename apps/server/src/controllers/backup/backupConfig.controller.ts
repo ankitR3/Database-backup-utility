@@ -95,7 +95,7 @@ export async function toggleScheduler(req: Request, res: Response) {
         });
     }
 
-    const id = req.params.id;
+    const id = req.params.id as string;
     const { enabled } = req.body;
 
     if (!id) {
@@ -183,8 +183,8 @@ export async function updateScheduler(req: Request, res: Response) {
 }
 
 export async function deleteConfig(req: Request, res: Response) {
-  const userId = req.user?.id
-  const id = req.params.id
+  const userId = req.user?.id;
+  const id = req.params.id as string;
 
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized' })

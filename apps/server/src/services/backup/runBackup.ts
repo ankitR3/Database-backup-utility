@@ -1,7 +1,6 @@
 import fs from 'fs';
 import prisma from '@repo/db';
 import { createBackupFromConfig } from './backup.service';
-import { notifyBackupComplete } from '../../socket/socket';
 
 export async function runBackup(config: any) {
     const startTime = Date.now();
@@ -35,8 +34,6 @@ export async function runBackup(config: any) {
                 lastRunAt: new Date(),
             },
         });
-
-        notifyBackupComplete(config.id);
 
     } catch (err: any) {
         await prisma.backupHistory.create({

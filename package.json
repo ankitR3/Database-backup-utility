@@ -9,15 +9,21 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
-    "prettier": "^3.6.2",
-    "turbo": "^2.5.8",
-    "typescript": "5.9.2"
+    "prettier": "^3.8.1",
+    "turbo": "^2.9.1",
+    "typescript": "6.0.2",
+    "eslint": "^9.0.0"
   },
-  "packageManager": "pnpm@9.0.0",
+  "pnpm": {
+    "overrides": {
+      "eslint": "^9.0.0"
+    }
+  },
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.3.1"
   }
 }

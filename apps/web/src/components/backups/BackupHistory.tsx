@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { BACKUP_HISTORY_URL } from '@/routes/api-routes';
 import axios from 'axios';
@@ -17,120 +17,91 @@ type History = {
 
 type Props = {
     configId: string
+    onRunStart?: (fn: () => void) => void
 }
 
-export default function BackupHistory({ configId }: Props) {
+export default function BackupHistory({ configId, onRunStart }: Props) {
     const { data: session } = useSession();
     const token = session?.user?.token as string;
 
     const [data, setData] = useState<History[]>([]);
     const [expanded, setExpanded] = useState(false);
     const[loading, setLoading] = useState(true);
+    const cancelledRef = useRef(false);
+    const latestCreatedAt = useRef<string | null>(null);
 
     const visibleBackups = expanded ? data : data.slice(0, Math.min(3, data.length));
 
     useEffect(() => {
-        if (!token) {
-            return;
-        }
-
-        async function init() {
+        if (!token) return;
+        cancelledRef.current = false;
+        
+        async function poll() {
             try {
                 setLoading(true);
                 const res = await axios.get(
                     `${BACKUP_HISTORY_URL}/${configId}`,
                     {
                         headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
+                            Authorization: `Bearer ${token}`
+                        }
                     }
-                )
-
-                setData(res.data)
-            } catch(err) {
+                );
+                if (!cancelledRef.current) {
+                    setData(res.data);
+                    setLoading(false);
+                    if (res.data.length > 0) {
+                        latestCreatedAt.current = res.data[0].createdAt;
+                    }
+                }
+            } catch (err) {
                 console.error('Initial fetch failed: ', err);
-            } finally {
-                setLoading(false);
+                if (!cancelledRef.current) {
+                    setLoading(false);
+                }
+                return;
+            }
+            
+            while(!cancelledRef.current) {
+                try {
+                    const since = latestCreatedAt.current ?? new Date().toISOString();
+                    const res = await axios.get(
+                        `${BACKUP_HISTORY_URL}/${configId}?since=${since}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
+                        }
+                    );
+                    
+                    if (!cancelledRef.current && res.data.length > 0) {
+                        setData(prev => {
+                            const existingIds = new Set(prev.map(item => item.id));
+                            const newItems = res.data.filter((item: History) => !existingIds.has(item.id));
+                            if (newItems.length === 0) return prev;
+                            const updated = [...newItems, ...prev];
+                            latestCreatedAt.current = updated[0].createdAt;
+                            return updated;
+                        });
+                    }
+                } catch (err) {
+                    if (!cancelledRef.current) {
+                        console.error('Long poll failed: ', err);
+                        await new Promise(r => setTimeout(r, 3000));
+                    }
+                }
             }
         }
+        poll();
 
-        init()
+        return () => {
+            cancelledRef.current = true;
+        };
     }, [token, configId]);
 
     useEffect(() => {
         setExpanded(false);
     }, [configId]);
-
-    async function refreshHistory() {
-        if(!token) {
-            return;
-        }
-
-        try {
-            const res = await axios.get(
-                `${BACKUP_HISTORY_URL}/${configId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            )
-
-            setData(prev => {
-                if (JSON.stringify(prev) === JSON.stringify(res.data)) {
-                    return prev;
-                }
-                return res.data;
-            })
-
-        } catch (err) {
-            console.error('Refresh failed: ', err);
-        }
-    }
-
-    useEffect(() => {
-        if (!token) {
-            return;
-        }
-
-        const ws = new WebSocket('ws://localhost:1516');
-        let isOpen = false;
-
-        ws.onopen = () => {
-            isOpen = true;
-            ws.send(
-                JSON.stringify({
-                    type: 'SUBSCRIBE',
-                    configId,
-                })
-            );
-        };
-
-        ws.onmessage = (event) => {
-            const message = JSON.parse(event.data)
-
-            if (message.type === 'BACKUP_COMPLETE') {
-                console.log('Backup Complete');
-                refreshHistory();
-            }
-        }
-
-        ws.onerror = (err) => {
-            console.log('ws error: ', err);
-        }
-
-        return () => {
-            if (isOpen && ws.readyState === WebSocket.OPEN) {
-                ws.send(
-                    JSON.stringify({
-                        type: 'UNSUBSCRIBE',
-                        configId,
-                    })
-                );
-            }
-            ws.close()
-        }
-    }, [configId, token]);
 
     return (
         <div className='bg-white p-4 rounded-xl mt-4 shadow-sm'>

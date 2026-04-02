@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 export async function deleteBackupController(req: Request, res: Response) {
     try {
         const userId = req.user?.id;
-        const { backupId } = req.params;
+        const backupId = req.params.backupId as string;
 
         if (!userId) {
             return res.status(401).json({

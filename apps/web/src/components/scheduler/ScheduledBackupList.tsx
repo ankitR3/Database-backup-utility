@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { getBackupConfigs, deleteBackup } from '@/src/services/scheduler.service';
 import SchedulerSkeleton from './SchedulerSkeleton';
@@ -60,22 +60,16 @@ function getSchedulerText(config: BackupConfig) {
 
 export default function ScheduledBackupList({ onAddClick, refreshKey }: Props) {
   const { data: session, status } = useSession()
-  const token = session?.user?.token as string
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const token = session?.user?.token as string;
   
-  const [configs, setConfigs] = useState<BackupConfig[]>([])
-  const [loading, setLoading] = useState(true)
+  const [configs, setConfigs] = useState<BackupConfig[]>([]);
+  const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { setActiveTab } = useDashboardStore();
 
   async function loadConfigs(showLoader = false) {
-    if (!token) {
-      return;
-    }
-
-    if (showLoader) {
-      setLoading(true);
-    }
+    if (!token) return;
+    if (showLoader) setLoading(true);
 
     try {
       const data = await getBackupConfigs(token)
@@ -85,37 +79,20 @@ export default function ScheduledBackupList({ onAddClick, refreshKey }: Props) {
         }
         return data;
       });
+    } catch (err) {
+      console.error('Failed to load configs: ', err);
     } finally {
-      if (showLoader) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     if (!token) return;
-    loadConfigs(true)
-  }, [token, refreshKey])
-
-  useEffect(() => {
-    if (!token) return;
-    if (intervalRef.current) return;
-
-    intervalRef.current = setInterval(() => {
-      loadConfigs(false)
-    }, 10000)
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-  }, [token]);
+    loadConfigs(true);
+  }, [token, refreshKey]);
 
   async function handleDelete(id: string) {
     if (!token) return;
-
     setConfigs(prev => prev.filter(c => c.id !== id))
     await deleteBackup(token, id)
   }
@@ -147,9 +124,7 @@ export default function ScheduledBackupList({ onAddClick, refreshKey }: Props) {
           <p className='text-black'>
             You haven't created any backup yet. Get started by creating your first backup.
           </p>
-          <Button
-            onClick={onAddClick}
-          >
+          <Button onClick={onAddClick}>
             Create Backup
           </Button>
         </div>
@@ -173,7 +148,6 @@ export default function ScheduledBackupList({ onAddClick, refreshKey }: Props) {
 
                 <Button
                   variant='ghost'
-                  // size='sm'
                   onClick={() => setActiveTab(DashboardEnum.BACKUPS)}
                 >
                   Backups ↗

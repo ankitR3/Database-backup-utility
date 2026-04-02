@@ -14,6 +14,7 @@ export default function BackupBase() {
     const [configs, setConfigs] = useState<BackupConfig[]>([]);
     const [configsLoaded, setConfigsLoaded] = useState(false);
     const [statsLoaded, setStatsLoaded] = useState(false);
+    const [selectConfigId, setSelectedConfigId] = useState<string | null>(null);
 
     const allLoaded = configsLoaded && statsLoaded;
 
@@ -22,10 +23,7 @@ export default function BackupBase() {
     }, []);
 
     useEffect(() => {
-        if (status === 'loading') {
-            return;
-        }
-
+        if (status === 'loading') return;
         if (status !== 'authenticated' || !token) {
             setConfigsLoaded(true);
             return;
@@ -39,6 +37,9 @@ export default function BackupBase() {
                     },
                 });
                 setConfigs(res.data);
+                if (res.data.length > 0) {
+                    setSelectedConfigId(res.data[0].id);
+                }
             } catch (err) {
                 console.log('web config fetch error: ', err);
             } finally {
@@ -64,6 +65,8 @@ export default function BackupBase() {
         )
     }
 
+    const selectedConfig = configs.find(c => c.id === selectConfigId);
+
     return (
         <div className='space-y-6 w-130'>
             <BackupStatsCard onLoaded={handleStatsLoaded} />
@@ -73,25 +76,40 @@ export default function BackupBase() {
                     No backup configurations yet.
                 </p>
             ) : (
-                configs.map(config => {
-                    const dbName = config.mongoDbName || config.pgDbName;
-                    return (
-                        <div
-                            key={config.id}
-                            className='bg-gray-200 text-black p-5 rounded-xl space-y-4 shadow-md shadow-gray-300'
-                        >
+                <>
+                    <div>
+                        {configs.map(config => {
+                            const dbName = config.mongoDbName || config.pgDbName;
+                            const isSelected = config.id === selectConfigId;
+                            return (
+                                <button
+                                    key={config.id}
+                                    onClick={() => setSelectedConfigId(config.id)}
+                                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition cursor-pointer capitalize
+                                        ${
+                                            isSelected ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    {config.type} -{dbName}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {selectedConfig && (
+                        <div className='bg-gray-100 text-black p-5 rounded-xl space-y-4 shadow-[0_0_20px_rgba(0,0,0,0.08)]'>
                             <div>
                                 <p className='text-lg font-semibold capitalize'>
-                                    {config.type} - {dbName}
+                                    {selectedConfig.type} - {selectedConfig.mongoDbName || selectedConfig.pgDbName}
                                 </p>
                                 <div className='mt-3'>
-                                    <BackupButton configId={config.id} />
+                                    <BackupButton configId={selectedConfig.id} />
                                 </div>
                             </div>
-                            <BackupHistory configId={config.id} />
+                            <BackupHistory configId={selectedConfig.id} />
                         </div>
-                    );
-                })
+                    )}
+                </>
             )}
         </div>
     );
